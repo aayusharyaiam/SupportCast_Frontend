@@ -19,7 +19,7 @@ export default function AppShell({ children }) {
           ${isSidebarOpen ? 'ml-64' : 'ml-16'}
         `}
       >
-        <header className="h-16 bg-bg-surface border-b border-bg-elevated flex items-center px-4">
+        <header className="h-16 bg-[#0D1220]/70 backdrop-blur-md border-b border-white/[0.08] flex items-center px-4">
           <button
             onClick={toggleSidebar}
             className="p-2 rounded-lg text-text-secondary hover:text-text-primary hover:bg-bg-elevated transition-colors lg:hidden"

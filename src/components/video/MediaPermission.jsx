@@ -6,35 +6,35 @@ export default function MediaPermission({ onRequest, isRequesting }) {
   return (
     <div className="min-h-screen bg-bg-base flex items-center justify-center p-4">
       <div className="max-w-md w-full text-center">
-        <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-primary-500/20 flex items-center justify-center">
-          <Video className="w-10 h-10 text-primary-500" />
+        <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center">
+          <Video className="w-10 h-10 text-blue-400" />
         </div>
 
-        <h1 className="text-2xl font-bold text-text-primary mb-3">
+        <h1 className="text-2xl font-bold text-white mb-3">
           Ready to Join?
         </h1>
-        <p className="text-text-secondary mb-8">
+        <p className="text-gray-400 mb-8">
           We need access to your camera and microphone for the video call.
         </p>
 
         <div className="space-y-4">
-          <div className="flex items-center gap-4 p-4 rounded-lg bg-bg-surface">
-            <div className="w-10 h-10 rounded-lg bg-bg-elevated flex items-center justify-center">
-              <Video className="w-5 h-5 text-text-secondary" />
+          <div className="flex items-center gap-4 p-4 rounded-lg bg-white/[0.06] border border-white/[0.08]">
+            <div className="w-10 h-10 rounded-lg bg-white/[0.06] flex items-center justify-center">
+              <Video className="w-5 h-5 text-gray-400" />
             </div>
             <div className="text-left">
-              <p className="font-medium text-text-primary">Camera</p>
-              <p className="text-sm text-text-secondary">Share your video feed</p>
+              <p className="font-medium text-gray-200">Camera</p>
+              <p className="text-sm text-gray-500">Share your video feed</p>
             </div>
           </div>
 
-          <div className="flex items-center gap-4 p-4 rounded-lg bg-bg-surface">
-            <div className="w-10 h-10 rounded-lg bg-bg-elevated flex items-center justify-center">
-              <Mic className="w-5 h-5 text-text-secondary" />
+          <div className="flex items-center gap-4 p-4 rounded-lg bg-white/[0.06] border border-white/[0.08]">
+            <div className="w-10 h-10 rounded-lg bg-white/[0.06] flex items-center justify-center">
+              <Mic className="w-5 h-5 text-gray-400" />
             </div>
             <div className="text-left">
-              <p className="font-medium text-text-primary">Microphone</p>
-              <p className="text-sm text-text-secondary">Share your audio</p>
+              <p className="font-medium text-gray-200">Microphone</p>
+              <p className="text-sm text-gray-500">Share your audio</p>
             </div>
           </div>
         </div>
@@ -42,7 +42,7 @@ export default function MediaPermission({ onRequest, isRequesting }) {
         {isRequesting && (
           <div className="flex items-center justify-center gap-2 mt-6">
             <Spinner size="sm" />
-            <span className="text-text-secondary">Requesting permissions...</span>
+            <span className="text-gray-400">Requesting permissions...</span>
           </div>
         )}
 
@@ -63,7 +63,7 @@ export default function MediaPermission({ onRequest, isRequesting }) {
           </Button>
         </div>
 
-        <p className="text-text-muted text-sm mt-6">
+        <p className="text-gray-600 text-sm mt-6">
           Your media is never recorded without your consent.
         </p>
       </div>

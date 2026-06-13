@@ -20,10 +20,10 @@ export default function ChatInput({ onSend, onFileSelect }) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="p-3 border-t border-bg-elevated">
+    <form onSubmit={handleSubmit} className="p-3 border-t border-white/[0.06]">
       <div className="flex items-end gap-2">
         {onFileSelect && (
-          <label className="p-2 rounded-lg text-text-secondary hover:text-text-primary hover:bg-bg-elevated transition-colors cursor-pointer">
+          <label className="p-2 rounded-lg text-gray-500 hover:text-gray-200 hover:bg-white/[0.06] transition-colors cursor-pointer">
             <Paperclip className="w-5 h-5" />
             <input
               type="file"
@@ -40,7 +40,7 @@ export default function ChatInput({ onSend, onFileSelect }) {
             onKeyDown={handleKeyDown}
             placeholder="Type a message..."
             rows={1}
-            className="w-full px-3 py-2 rounded-lg bg-bg-base border border-bg-elevated text-text-primary placeholder-text-muted resize-none focus:outline-none focus:ring-2 focus:ring-primary-500"
+            className="w-full px-3 py-2 rounded-lg bg-white/[0.05] border border-white/[0.08] text-gray-200 placeholder-gray-600 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500/50"
             style={{ maxHeight: '120px' }}
           />
         </div>

@@ -17,9 +17,9 @@ export default function ChatPanel({ sessionId, onClose }) {
   };
 
   return (
-    <div className="w-80 bg-bg-surface border-l border-bg-elevated flex flex-col">
-      <div className="h-14 px-4 flex items-center justify-between border-b border-bg-elevated">
-        <h2 className="font-semibold text-text-primary">Chat</h2>
+    <div className="w-80 bg-[#0D1220]/80 backdrop-blur-md border-l border-white/[0.08] flex flex-col">
+      <div className="h-14 px-4 flex items-center justify-between border-b border-white/[0.06]">
+        <h2 className="font-semibold text-gray-200">Chat</h2>
         <button
           onClick={onClose}
           className="p-1 rounded-lg text-text-secondary hover:text-text-primary hover:bg-bg-elevated transition-colors"
@@ -30,7 +30,7 @@ export default function ChatPanel({ sessionId, onClose }) {
 
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {messages.length === 0 ? (
-          <p className="text-center text-text-muted text-sm py-8">
+          <p className="text-center text-gray-500 text-sm py-8">
             No messages yet. Start the conversation!
           </p>
         ) : (

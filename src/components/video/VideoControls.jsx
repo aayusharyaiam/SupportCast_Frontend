@@ -16,7 +16,7 @@ export default function VideoControls({
   onStopRecording,
 }) {
   return (
-    <div className="h-20 px-4 flex items-center justify-center gap-4 bg-bg-surface border-t border-bg-elevated">
+    <div className="h-20 px-4 flex items-center justify-center gap-4 bg-[#0D1220]/80 backdrop-blur-md border-t border-white/[0.08]">
       <Button
         variant={isAudioEnabled ? 'secondary' : 'danger'}
         size="icon"
@@ -58,7 +58,7 @@ export default function VideoControls({
 
       {isAgent && (
         <>
-          <div className="w-px h-8 bg-bg-elevated" />
+          <div className="w-px h-8 bg-white/10" />
 
           {isRecording ? (
             <Button
@@ -77,13 +77,13 @@ export default function VideoControls({
               onClick={onStartRecording}
               aria-label="Start recording"
             >
-              <Circle className="w-4 h-4 text-status-error" />
+              <Circle className="w-4 h-4 text-red-400" />
             </Button>
           )}
         </>
       )}
 
-      <div className="w-px h-8 bg-bg-elevated" />
+      <div className="w-px h-8 bg-white/10" />
 
       <Button
         variant="danger"

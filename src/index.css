@@ -7,11 +7,13 @@
 :root {
   --primary-500: #3B82F6;
   --primary-600: #2563EB;
+  --primary-400: #60A5FA;
   --primary-900: #1E3A5F;
 
-  --bg-base: #0F1117;
-  --bg-surface: #1A1D27;
-  --bg-elevated: #22263A;
+  --bg-base: #080C14;
+  --bg-surface: rgba(255, 255, 255, 0.04);
+  --bg-elevated: rgba(255, 255, 255, 0.08);
+  --bg-overlay: rgba(0, 0, 0, 0.4);
 
   --status-live: #10B981;
   --status-warning: #F59E0B;
@@ -21,6 +23,10 @@
   --text-primary: #F9FAFB;
   --text-secondary: #9CA3AF;
   --text-muted: #4B5563;
+
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-border-strong: rgba(255, 255, 255, 0.14);
+  --glass-bg: rgba(255, 255, 255, 0.05);
 }
 
 * {
@@ -44,22 +50,53 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.15); }
 
-::-webkit-scrollbar-track {
+/* Glass utility classes */
+.glass {
   background: var(--bg-surface);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(16px);
+  border-radius: 16px;
 }
 
-::-webkit-scrollbar-thumb {
-  background: var(--bg-elevated);
-  border-radius: 4px;
+.glass-card {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--glass-border-strong);
+  border-radius: 12px;
 }
 
-::-webkit-scrollbar-thumb:hover {
-  background: var(--text-muted);
+.glass-input {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  color: #E5E7EB;
+  padding: 10px 14px;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.glass-input::placeholder { color: #6B7280; }
+.glass-input:focus {
+  outline: none;
+  border-color: rgba(59, 130, 246, 0.5);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Dot grid background pattern */
+.bg-dotgrid {
+  background-image: radial-gradient(rgba(255,255,255,0.05) 1px, transparent 1px);
+  background-size: 28px 28px;
+}
+
+/* Gradient orb */
+.bg-orb {
+  background: radial-gradient(ellipse at 60% 20%, rgba(59,130,246,0.12) 0%, transparent 55%);
+}
+
+.bg-orb-warm {
+  background: radial-gradient(ellipse at 40% 80%, rgba(245,158,11,0.06) 0%, transparent 50%);
 }
 
 @layer utilities {
@@ -70,22 +107,66 @@ body {
   .animate-pulse-recording {
     animation: pulse-recording 2s ease-in-out infinite;
   }
+
+  .glass-elevated {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 12px;
+  }
 }
 
 @keyframes fade-in {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes pulse-recording {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.6;
-  }
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* Video tile dark background */
+.video-tile {
+  background: #0D1117;
+  border-radius: 16px;
+  border: 1px solid rgba(255,255,255,0.06);
+  overflow: hidden;
+  position: relative;
+}
+
+/* Call controls pill */
+.call-controls {
+  background: rgba(20, 25, 40, 0.85);
+  border: 1px solid rgba(255,255,255,0.1);
+  backdrop-filter: blur(20px);
+  border-radius: 9999px;
+  padding: 12px 24px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Chat message bubbles */
+.chat-bubble-agent {
+  background: rgba(59, 130, 246, 0.2);
+  color: #93C5FD;
+  border-radius: 16px 16px 4px 16px;
+}
+
+.chat-bubble-customer {
+  background: rgba(255, 255, 255, 0.07);
+  color: #D1D5DB;
+  border-radius: 16px 16px 16px 4px;
+}
+
+/* Table glass wrapper */
+.glass-table {
+  border-radius: 12px;
+  overflow: hidden;
+}
+.glass-table tr + tr {
+  border-top: 1px solid rgba(255,255,255,0.04);
+}
+.glass-table tbody tr:hover {
+  background: rgba(255,255,255,0.02);
 }

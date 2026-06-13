@@ -9,10 +9,10 @@ const icons = {
 };
 
 const styles = {
-  success: 'bg-status-live/20 border-status-live text-status-live',
-  error: 'bg-status-error/20 border-status-error text-status-error',
-  warning: 'bg-status-warning/20 border-status-warning text-status-warning',
-  info: 'bg-primary-500/20 border-primary-500 text-primary-500',
+  success: 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400 backdrop-blur-sm',
+  error: 'bg-red-500/10 border-red-500/30 text-red-400 backdrop-blur-sm',
+  warning: 'bg-amber-500/10 border-amber-500/30 text-amber-400 backdrop-blur-sm',
+  info: 'bg-blue-500/10 border-blue-500/30 text-blue-400 backdrop-blur-sm',
 };
 
 export default function ToastContainer() {
@@ -38,7 +38,7 @@ export default function ToastContainer() {
             `}
           >
             <Icon className="w-5 h-5 flex-shrink-0 mt-0.5" />
-            <p className="flex-1 text-sm text-text-primary">{toast.message}</p>
+            <p className="flex-1 text-sm text-gray-200">{toast.message}</p>
             <button
               onClick={() => removeToast(toast.id)}
               className="flex-shrink-0 p-0.5 rounded hover:bg-white/10 transition-colors"

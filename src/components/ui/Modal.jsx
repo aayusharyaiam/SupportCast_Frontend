@@ -64,12 +64,12 @@ export default function Modal({
         ref={modalRef}
         className={`
           relative w-full ${sizes[size]}
-          bg-bg-surface rounded-xl
+          glass-elevated rounded-xl
           shadow-2xl
           animate-fade-in
         `}
       >
-        <div className="flex items-center justify-between p-4 border-b border-bg-elevated">
+        <div className="flex items-center justify-between p-4 border-b border-white/[0.06]">
           <h2 id="modal-title" className="text-lg font-semibold text-text-primary">
             {title}
           </h2>
@@ -87,7 +87,7 @@ export default function Modal({
         <div className="p-4">{children}</div>
 
         {footer && (
-          <div className="flex items-center justify-end gap-2 p-4 border-t border-bg-elevated">
+          <div className="flex items-center justify-end gap-2 p-4 border-t border-white/[0.06]">
             {footer}
           </div>
         )}

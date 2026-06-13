@@ -14,67 +14,50 @@ export default function JudgeGuide() {
   if (!visible) return null;
 
   return (
-    <div className="mx-auto mb-6 rounded-xl border border-amber-500 bg-amber-950/30 p-4 sm:p-5">
+    <div className="mx-auto mb-7 rounded-2xl border border-amber-500/20 bg-amber-500/5 backdrop-blur-sm p-4 sm:p-5">
       <div className="flex items-start gap-3">
-        <Trophy className="w-6 h-6 text-amber-400 mt-0.5 shrink-0" />
+        <div className="w-8 h-8 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center shrink-0 mt-0.5">
+          <Trophy className="w-4 h-4 text-amber-400" />
+        </div>
         <div className="flex-1 min-w-0">
-          <div className="flex items-center justify-between gap-4 mb-3">
-            <h2 className="font-bold text-amber-400 text-base sm:text-lg leading-tight">
+          <div className="flex items-center justify-between gap-4 mb-4">
+            <h2 className="font-bold text-amber-400 text-sm sm:text-base leading-tight">
               Hackathon Judge Guide — SupportCast
             </h2>
             <button
               onClick={() => setVisible(false)}
-              className="p-1 rounded text-amber-500 hover:text-amber-300 hover:bg-amber-900/30 transition-colors shrink-0"
+              className="p-1 rounded-lg text-amber-500/60 hover:text-amber-400 hover:bg-amber-500/10 transition-all shrink-0"
               aria-label="Dismiss judge guide"
             >
-              <X className="w-5 h-5" />
+              <X className="w-4 h-4" />
             </button>
           </div>
 
-          <div className="grid sm:grid-cols-2 gap-x-8 gap-y-2 text-sm">
+          <div className="grid sm:grid-cols-2 gap-x-8 gap-y-3 text-sm">
             <div>
-              <p className="text-amber-200 font-medium mb-1">Quick Start:</p>
-              <ol className="text-amber-100/80 space-y-0.5 list-decimal list-inside">
-                <li>You are logged in as Agent or Admin</li>
+              <p className="text-amber-400 font-medium mb-2 text-xs uppercase tracking-wider">Quick Start</p>
+              <ol className="space-y-1 list-decimal list-inside text-gray-300 text-sm">
+                <li>Logged in as Agent or Admin</li>
                 <li>Click &ldquo;New Session&rdquo; to create a support session</li>
-                <li>Copy the invite link → open in Incognito as Customer</li>
+                <li>Copy invite link → open in Incognito as Customer</li>
                 <li>Both participants join the video call automatically</li>
-                <li>Try: Chat · Mute · Camera toggle · File sharing · Recording</li>
+                <li>Try: Chat, Mute, Camera, File sharing, Recording</li>
               </ol>
             </div>
 
-            <div className="text-sm">
-              <p className="text-amber-200 font-medium mb-1">Demo Credentials:</p>
-              <table className="w-full text-amber-100/80">
-                <tbody>
-                  <tr>
-                    <td className="py-0.5 pr-3 font-medium whitespace-nowrap">Admin:</td>
-                    <td className="py-0.5 font-mono">admin@supportcast.com / Admin@1234</td>
-                  </tr>
-                  <tr>
-                    <td className="py-0.5 pr-3 font-medium whitespace-nowrap">Agent:</td>
-                    <td className="py-0.5 font-mono">agent@supportcast.com / Demo@1234</td>
-                  </tr>
-                  <tr>
-                    <td className="py-0.5 pr-3 font-medium whitespace-nowrap">Judge:</td>
-                    <td className="py-0.5 font-mono">judge@supportcast.com / Judge@1234</td>
-                  </tr>
-                  <tr>
-                    <td className="py-0.5 pr-3 font-medium whitespace-nowrap">Customer:</td>
-                    <td className="py-0.5">Use any invite link (no account needed)</td>
-                  </tr>
-                </tbody>
-              </table>
-
-              <p className="text-amber-200 font-medium mt-3 mb-1">Live URLs:</p>
-              <table className="w-full text-amber-100/80">
-                <tbody>
-                  <tr><td className="py-0.5 pr-3 font-medium">Frontend:</td><td className="py-0.5 font-mono text-xs break-all">{DEMO_URLS.frontend}</td></tr>
-                  <tr><td className="py-0.5 pr-3 font-medium">Backend:</td><td className="py-0.5 font-mono text-xs break-all">{DEMO_URLS.backend}</td></tr>
-                  <tr><td className="py-0.5 pr-3 font-medium">Health:</td><td className="py-0.5 font-mono text-xs break-all">{DEMO_URLS.health}</td></tr>
-                  <tr><td className="py-0.5 pr-3 font-medium">Metrics:</td><td className="py-0.5 font-mono text-xs break-all">{DEMO_URLS.metrics}</td></tr>
-                </tbody>
-              </table>
+            <div>
+              <p className="text-amber-400 font-medium mb-2 text-xs uppercase tracking-wider">Demo Credentials</p>
+              <div className="space-y-1 text-gray-400 font-mono text-xs">
+                <p><span className="text-gray-500">Admin:</span> admin@supportcast.com / Admin@1234</p>
+                <p><span className="text-gray-500">Agent:</span> agent@supportcast.com / Demo@1234</p>
+                <p><span className="text-gray-500">Judge:</span> judge@supportcast.com / Judge@1234</p>
+                <p><span className="text-gray-500">Customer:</span> use invite link (no account)</p>
+              </div>
+              <p className="text-amber-400 font-medium mb-2 text-xs uppercase tracking-wider mt-4">Live URLs</p>
+              <div className="space-y-0.5 text-gray-500 font-mono text-xs">
+                <p><span className="text-gray-600">Frontend:</span> <span className="text-gray-400 break-all">{DEMO_URLS.frontend}</span></p>
+                <p><span className="text-gray-600">Backend:</span> <span className="text-gray-400 break-all">{DEMO_URLS.backend}</span></p>
+              </div>
             </div>
           </div>
         </div>
