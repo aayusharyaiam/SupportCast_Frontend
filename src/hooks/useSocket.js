@@ -4,6 +4,7 @@ import { getErrorDetails, useUiStore } from '../store/uiStore';
 
 export function useSocket(sessionId) {
   const socketRef = useRef(null);
+  const isDisposingRef = useRef(false);
   const [joinedData, setJoinedData] = useState(null);
   const isConnecting = useUiStore((state) => state.isConnecting);
   const setIsConnecting = useUiStore((state) => state.setIsConnecting);
@@ -13,6 +14,7 @@ export function useSocket(sessionId) {
   useEffect(() => {
     if (!sessionId) return;
 
+    isDisposingRef.current = false;
     const socket = getSocket();
     socketRef.current = socket;
 
@@ -31,6 +33,10 @@ export function useSocket(sessionId) {
             name: localStorage.getItem('displayName') || 'User',
           },
           (error, response) => {
+            if (isDisposingRef.current && error?.message === 'socket has been disconnected') {
+              return;
+            }
+
             if (error || response?.ok === false) {
               const message = response?.error?.message || error?.message || 'Failed to join session';
               setConnectionError(message);
@@ -42,7 +48,11 @@ export function useSocket(sessionId) {
         );
     };
 
-    const onDisconnect = () => {
+    const onDisconnect = (reason) => {
+      if (isDisposingRef.current || reason === 'io client disconnect') {
+        return;
+      }
+
       const message = 'Disconnected from server';
       setConnectionError(message);
       showError(message);
@@ -63,6 +73,7 @@ export function useSocket(sessionId) {
     }
 
     return () => {
+      isDisposingRef.current = true;
       socket.off('connect', onConnect);
       socket.off('disconnect', onDisconnect);
       socket.off('connect_error', onConnectError);
@@ -77,6 +88,11 @@ export function useSocket(sessionId) {
       }
 
       socketRef.current.timeout(10000).emit(event, data, (error, response) => {
+        if (isDisposingRef.current && error?.message === 'socket has been disconnected') {
+          resolve(null);
+          return;
+        }
+
         if (error) {
           reject(error);
           return;
@@ -107,6 +123,7 @@ export function useSocket(sessionId) {
 
   useEffect(() => {
     return () => {
+      isDisposingRef.current = true;
       disconnectSocket();
     };
   }, []);

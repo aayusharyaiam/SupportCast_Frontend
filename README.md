@@ -1,20 +1,26 @@
 # SupportCast Frontend
 
-Real-time video support platform frontend — React 18 + Vite + Tailwind CSS + Zustand + mediasoup-client.
+React frontend for SupportCast, the AtomQuest Hackathon real-time video support platform.
+
+The frontend powers the agent dashboard, customer invite join flow, live call room, chat and file sharing UI, recording controls, post-call history, and admin dashboard.
+
+## Live App
+
+Production frontend: https://support-cast-frontend.vercel.app
 
 ## Tech Stack
 
-| Layer | Technology |
-|------|------------|
-| UI Framework | React 18 |
-| Build Tool | Vite |
+| Area | Technology |
+|---|---|
+| UI | React 18 |
+| Build | Vite |
 | Styling | Tailwind CSS |
-| State Management | Zustand |
+| State | Zustand |
 | Routing | React Router 6 |
-| WebSocket | Socket.io-client |
-| Media | mediasoup-client 3 |
-| API Client | Axios |
-| Database | Supabase JS |
+| Realtime | Socket.io-client |
+| Media | mediasoup-client |
+| API | Axios |
+| Auth/Storage client | Supabase JS |
 | Icons | Lucide React |
 
 ## Getting Started
@@ -22,12 +28,12 @@ Real-time video support platform frontend — React 18 + Vite + Tailwind CSS + Z
 ### Prerequisites
 
 - Node.js 20+
-- Backend server running at `http://localhost:3001`
-- Supabase project with the schema applied
+- Backend running locally or deployed
+- Supabase project with the backend schema applied
 
 ### Environment Variables
 
-Copy `.env.example` to `.env`:
+Copy `.env.example` to `.env` and set:
 
 ```env
 VITE_API_URL=http://localhost:3001
@@ -38,123 +44,149 @@ VITE_ENABLE_RECORDING=true
 VITE_ENABLE_FILE_SHARING=true
 ```
 
-### Installation
+For production, use:
+
+```env
+VITE_API_URL=https://supportcast-backend.onrender.com
+VITE_SOCKET_URL=https://supportcast-backend.onrender.com
+```
+
+### Commands
 
 ```bash
 npm install
-```
-
-### Running
-
-```bash
-# Development
 npm run dev
-
-# Production build
 npm run build
-
-# Preview production build
 npm run preview
+npm run lint
+npm run format
 ```
-
-### Scripts
 
 | Command | Description |
-|---------|-------------|
-| `npm run dev` | Start dev server (port 5173) |
-| `npm run build` | Build for production |
-| `npm run preview` | Preview production build |
+|---|---|
+| `npm run dev` | Start Vite dev server on port 5173 |
+| `npm run build` | Build production assets |
+| `npm run preview` | Preview production build on port 4173 |
 | `npm run lint` | Run ESLint |
-| `npm run format` | Format with Prettier |
+| `npm run format` | Format source files with Prettier |
+
+## Routes
+
+| Route | Description | Access |
+|---|---|---|
+| `/login` | Agent/admin login | Public |
+| `/dashboard` | Agent dashboard and session creation | Agent/Admin |
+| `/join?token=<uuid>` | Customer invite flow | Public invite token |
+| `/session/:id` | Active support call | Agent/Customer/Admin |
+| `/session/:id/ended` | Post-call summary and rejoin state | Participant |
+| `/dashboard/admin` | Admin live sessions and history | Admin |
+| `/admin` | Admin dashboard alias | Admin |
+| `/admin/sessions/:id` | Admin session detail and event log | Admin |
+
+## Implemented Features
+
+### Core Session UI
+
+- Agent login with Supabase Auth.
+- Dashboard for listing and creating sessions.
+- Invite modal and shareable `/join?token=<uuid>` links.
+- Customer join flow with display name capture.
+- Session states for waiting, active, ended, and post-call screens.
+
+### Video and Audio
+
+- mediasoup-client send and receive transports.
+- Opus audio and VP8 video through the backend SFU.
+- No peer-to-peer media path.
+- Camera/mic permission flow.
+- Join with video or audio only.
+- Mute/unmute and camera on/off controls.
+- Connection quality indicator based on RTCStats packet loss and jitter.
+
+### Chat and File Sharing
+
+- Real-time Socket.io chat.
+- Optimistic message display with server acknowledgement.
+- Chat history retained after calls.
+- File upload from chat input.
+- Client flow for signed upload URLs.
+- File messages render with file name, type cue, and download link.
+
+### Recording UI
+
+- Agent-only start and stop recording controls.
+- Recording badge shown while recording.
+- Status updates for recording, processing, ready, and error states.
+- Recording links appear in session history after backend upload.
+
+### Admin UI
+
+- Admin-only route protection.
+- Live sessions table with 5-second auto-refresh.
+- Searchable and date-filterable session history.
+- Force-end button with confirmation dialog.
+- Session detail page with event log.
+- Agent/admin account management.
+
+### Stability and UX
+
+- React route-level lazy loading with `React.lazy` and `Suspense`.
+- Skeleton loaders for async screens.
+- Error Boundary around major page sections.
+- ToastContainer and global error handlers at app level.
+- Socket.io reconnect and re-auth flow.
+- Intentional call leave cleanup to avoid noisy disconnect errors.
 
 ## Project Structure
 
-```
+```text
 src/
-├── components/
-│   ├── ui/           # Button, Badge, Modal, Toast, Spinner, EmptyState, ConfirmDialog
-│   ├── layout/       # AppShell, Sidebar, PageSkeleton
-│   ├── video/        # VideoGrid, VideoTile, VideoControls, MediaPermission
-│   ├── chat/         # ChatPanel, ChatMessage, ChatInput, FileMessage
-│   ├── session/      # SessionCard, InviteModal, RecordingBadge
-│   └── admin/        # Admin tables
-├── pages/
-│   ├── Login.jsx            # Agent login
-│   ├── Dashboard.jsx         # Agent session list + create
-│   ├── SessionView.jsx       # Active call (video, chat, recording)
-│   ├── JoinFlow.jsx          # Customer join via token
-│   ├── SessionEnded.jsx      # Post-call summary
-│   ├── AdminDashboard.jsx    # Admin live sessions + history
-│   └── AdminSessionDetail.jsx
-├── hooks/
-│   ├── useSocket.js           # Socket.io connection + reconnect
-│   ├── useMediasoup.js        # WebRTC transport management
-│   ├── useLocalMedia.js       # getUserMedia, mute/unmute, camera toggle
-│   ├── useChat.js             # Chat state + send message + share file
-│   ├── useRecording.js        # Recording start/stop controls
-│   └── useConnectionQuality.js # RTCStats-based quality indicator
-├── store/
-│   ├── sessionStore.js    # Session state
-│   ├── chatStore.js       # Messages
-│   ├── participantStore.js # Local + remote participants
-│   └── uiStore.js         # Toasts, modals, loading states
-├── services/
-│   ├── api.js        # Axios API client (auth, sessions, admin, files)
-│   ├── supabase.js   # Supabase client
-│   └── socket.js     # Socket.io singleton
-└── utils/
-    ├── errors.js
-    └── asyncHandler.js
+  components/
+    admin/        Admin tables and session views
+    chat/         ChatPanel, ChatMessage, ChatInput, file message UI
+    layout/       App shell, sidebar, skeletons
+    session/      SessionCard, InviteModal, RecordingBadge
+    ui/           Button, Badge, Modal, Toast, Spinner, ConfirmDialog
+    video/        VideoGrid, VideoTile, VideoControls, MediaPermission
+  hooks/
+    useChat.js
+    useConnectionQuality.js
+    useLocalMedia.js
+    useMediasoup.js
+    useRecording.js
+    useSocket.js
+  pages/
+    AdminDashboard.jsx
+    AdminSessionDetail.jsx
+    Dashboard.jsx
+    JoinFlow.jsx
+    Login.jsx
+    SessionEnded.jsx
+    SessionView.jsx
+  services/
+    api.js
+    socket.js
+    supabase.js
+  store/
+    chatStore.js
+    participantStore.js
+    sessionStore.js
+    uiStore.js
+  utils/
 ```
 
-## Pages & Routes
+## Demo Accounts
 
-| Route | Description | Auth |
-|-------|-------------|------|
-| `/login` | Agent login | None |
-| `/dashboard` | Agent session list | Agent |
-| `/session/:id` | Active call (video, chat, recording) | Agent/Customer |
-| `/join?token=<uuid>` | Customer join flow | None |
-| `/session/:id/ended` | Post-call summary | Any |
-| `/dashboard/admin` | Admin live sessions | Admin |
-| `/admin` | Admin dashboard | Admin |
-| `/admin/sessions/:id` | Admin session detail + event log | Admin |
+| Role | Email | Password |
+|---|---|---|
+| Admin | admin@supportcast.com | Admin@1234 |
+| Agent | agent@supportcast.com | Demo@1234 |
+| Judge Agent | judge@supportcast.com | Judge@1234 |
+| Customer | No login needed; use invite link | N/A |
 
-## Features
+## Deployment
 
-### Phase 1 — Core
-- Agent login via Supabase Auth (email + password)
-- Session creation with shareable invite links (`/join?token=<uuid>`)
-- Real-time video/audio via mediasoup SFU (no P2P)
-- Mute/unmute microphone, enable/disable camera
-- Real-time chat with optimistic UI
-- Role-based access control (agent/customer)
-- Connection quality indicator (packet loss + jitter)
-
-### Phase 2 — Recording
-- Agent-only recording controls in `VideoControls`
-- Recording status badge (red pulse when recording)
-- Server-side FFmpeg encoding via PlainTransport
-- MP4 upload to Supabase Storage on stop
-- `processing` → `ready` / `error` status flow
-- Recording available in session history
-
-### Phase 3 — Admin Dashboard
-- Live sessions table with 5-second auto-refresh
-- Session history with pagination controls
-- Search/filter by session ID or agent name
-- Force-end session with confirmation dialog
-- Session detail view with event log
-- Admin-only routes and API protection
-
-### Phase 4 — File Sharing + Reconnect
-- File upload via paperclip icon in chat input
-- Type validation (images, PDFs, docs) + 10MB size limit
-- Files uploaded to Supabase Storage via signed URL
-- File messages rendered with download link
-- 30-second server-side reconnect grace window
-- Graceful reconnect clears timer, restores mediasoup state
-- Socket.io auto-reconnect with re-auth
+The frontend is configured for Vercel. Set the Vite environment variables in Vercel and deploy from the GitHub `main` branch.
 
 ## License
 

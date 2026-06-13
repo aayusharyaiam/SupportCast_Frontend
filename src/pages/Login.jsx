@@ -102,6 +102,34 @@ export default function Login() {
               </Button>
             </div>
           </form>
+
+          {/* Demo Credentials */}
+          <div className="mt-6 pt-4 border-t border-white/10 animate-fade-in animation-delay-250">
+            <p className="text-xs text-gray-400 text-center mb-3 uppercase tracking-wider">Demo Credentials</p>
+            <div className="flex flex-wrap gap-2 justify-center">
+              <button
+                type="button"
+                onClick={() => { setEmail('agent@supportcast.com'); setPassword('Demo@1234'); }}
+                className="px-3 py-1.5 text-xs font-medium bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 border border-blue-500/20 rounded-lg transition-colors"
+              >
+                Agent
+              </button>
+              <button
+                type="button"
+                onClick={() => { setEmail('admin@supportcast.com'); setPassword('12345678'); }}
+                className="px-3 py-1.5 text-xs font-medium bg-purple-500/10 hover:bg-purple-500/20 text-purple-400 border border-purple-500/20 rounded-lg transition-colors"
+              >
+                Admin
+              </button>
+              <button
+                type="button"
+                onClick={() => { setEmail('judge@supportcast.com'); setPassword('Judge@1234'); }}
+                className="px-3 py-1.5 text-xs font-medium bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 rounded-lg transition-colors"
+              >
+                Judge
+              </button>
+            </div>
+          </div>
         </div>
 
         <p className="text-center mt-5 text-gray-500/80 text-sm animate-fade-in animation-delay-300">

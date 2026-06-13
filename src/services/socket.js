@@ -22,6 +22,7 @@ export function getSocket() {
 
 export function disconnectSocket() {
   if (socket) {
+    socket.removeAllListeners();
     socket.disconnect();
     socket = null;
   }
