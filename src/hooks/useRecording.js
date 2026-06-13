@@ -17,8 +17,8 @@ export function useRecording(sessionId, socket) {
     const handleRecordingStatus = (data) => {
       if (data.sessionId === sessionId) {
         setRecordingStatus(data.status);
-        if (data.url) {
-          setRecordingUrl(data.url);
+        if (data.fileUrl) {
+          setRecordingUrl(data.fileUrl);
         }
         if (data.status === 'recording') {
           showSuccess('Recording started');

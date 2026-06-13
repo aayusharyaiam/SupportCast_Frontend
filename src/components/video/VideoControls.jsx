@@ -1,4 +1,4 @@
-import { Mic, MicOff, Video, VideoOff, PhoneOff, MessageSquare } from 'lucide-react';
+import { Mic, MicOff, Video, VideoOff, PhoneOff, MessageSquare, Circle, Square } from 'lucide-react';
 import Button from '../ui/Button';
 import ConnectionQuality from './ConnectionQuality';
 
@@ -10,6 +10,10 @@ export default function VideoControls({
   onOpenChat,
   onEndCall,
   connectionQuality,
+  isRecording,
+  isAgent,
+  onStartRecording,
+  onStopRecording,
 }) {
   return (
     <div className="h-20 px-4 flex items-center justify-center gap-4 bg-bg-surface border-t border-bg-elevated">
@@ -51,6 +55,33 @@ export default function VideoControls({
       >
         <MessageSquare className="w-5 h-5" />
       </Button>
+
+      {isAgent && (
+        <>
+          <div className="w-px h-8 bg-bg-elevated" />
+
+          {isRecording ? (
+            <Button
+              variant="danger"
+              size="icon"
+              onClick={onStopRecording}
+              aria-label="Stop recording"
+              className="animate-pulse-recording"
+            >
+              <Square className="w-4 h-4" />
+            </Button>
+          ) : (
+            <Button
+              variant="secondary"
+              size="icon"
+              onClick={onStartRecording}
+              aria-label="Start recording"
+            >
+              <Circle className="w-4 h-4 text-status-error" />
+            </Button>
+          )}
+        </>
+      )}
 
       <div className="w-px h-8 bg-bg-elevated" />
 

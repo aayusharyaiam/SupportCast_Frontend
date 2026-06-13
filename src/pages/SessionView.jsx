@@ -8,6 +8,7 @@ import { useSocket } from '../hooks/useSocket';
 import { useLocalMedia } from '../hooks/useLocalMedia';
 import { useMediasoup } from '../hooks/useMediasoup';
 import { useConnectionQuality } from '../hooks/useConnectionQuality';
+import { useRecording } from '../hooks/useRecording';
 import VideoGrid from '../components/video/VideoGrid';
 import VideoControls from '../components/video/VideoControls';
 import ChatPanel from '../components/chat/ChatPanel';
@@ -19,7 +20,7 @@ import Spinner from '../components/ui/Spinner';
 export default function SessionView() {
   const { id: sessionId } = useParams();
   const navigate = useNavigate();
-  const { emit, on, joinedData, isConnecting } = useSocket(sessionId);
+  const socket = useSocket(sessionId);
   const peerConnectionRef = useRef(null);
 
   const { setSession } = useSessionStore();
@@ -48,11 +49,20 @@ export default function SessionView() {
     consume,
   } = useMediasoup();
 
+  const { emit, on, joinedData, isConnecting } = socket;
   const { quality: connectionQuality } = useConnectionQuality(peerConnectionRef.current);
+  const {
+    isRecording,
+    recordingStatus,
+    startRecording,
+    stopRecording,
+  } = useRecording(sessionId, socket?.socket || null);
 
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [remoteStream, setRemoteStream] = useState(null);
   const [recvTransport, setRecvTransport] = useState(null);
+
+  const isAgent = joinedData?.role === 'agent';
 
   useEffect(() => {
     if (!joinedData) return;
@@ -131,6 +141,14 @@ export default function SessionView() {
     toggleLocalVideo();
     emit('toggle-video', { sessionId, enabled: !isVideoEnabled });
   }, [toggleLocalVideo, emit, sessionId, isVideoEnabled]);
+
+  const handleStartRecording = useCallback(() => {
+    startRecording();
+  }, [startRecording]);
+
+  const handleStopRecording = useCallback(() => {
+    stopRecording();
+  }, [stopRecording]);
 
   const handleEndCall = useCallback(() => {
     emit('end-session', { sessionId });
@@ -240,6 +258,10 @@ export default function SessionView() {
           onOpenChat={() => setIsChatOpen(true)}
           onEndCall={handleEndCall}
           connectionQuality={connectionQuality}
+          isRecording={isRecording}
+          isAgent={isAgent}
+          onStartRecording={handleStartRecording}
+          onStopRecording={handleStopRecording}
         />
       </div>
 
