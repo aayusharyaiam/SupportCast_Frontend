@@ -12,7 +12,7 @@ export default function InviteModal({ session, onClose }) {
 
   const inviteToken = session.invite_token || session.inviteToken;
   const inviteLink = `${window.location.origin}/join?token=${inviteToken}`;
-  const sessionId = session.id || session.session_id || session.data?.id;
+  const sessionId = session.id || session.sessionId || session.session_id || session.data?.id;
 
   const handleCopy = async () => {
     try {
