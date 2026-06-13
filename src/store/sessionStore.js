@@ -12,7 +12,14 @@ export const useSessionStore = create((set, get) => ({
 
   clearSession: () => set({ session: null, recordingStatus: null, recordingUrl: null }),
 
-  setSessions: (sessions) => set({ sessions }),
+  setSessions: (sessions) => {
+    const sessionsArray = Array.isArray(sessions)
+      ? sessions
+      : Array.isArray(sessions?.data)
+      ? sessions.data
+      : [];
+    set({ sessions: sessionsArray });
+  },
 
   addSession: (session) => set((state) => ({
     sessions: [session, ...state.sessions],
