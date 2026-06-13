@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Video, Clock, Users } from 'lucide-react';
+import { Plus, Video, Clock } from 'lucide-react';
 import { sessionAPI } from '../services/api';
 import { useSessionStore } from '../store/sessionStore';
 import { useUiStore } from '../store/uiStore';
@@ -10,6 +10,7 @@ import Spinner from '../components/ui/Spinner';
 import EmptyState from '../components/ui/EmptyState';
 import SessionCard from '../components/session/SessionCard';
 import InviteModal from '../components/session/InviteModal';
+import JudgeGuide from '../components/ui/JudgeGuide';
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -59,6 +60,7 @@ export default function Dashboard() {
 
   return (
     <div className="max-w-6xl mx-auto">
+      <JudgeGuide />
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-2xl font-bold text-text-primary">Sessions</h1>

@@ -1,6 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Shield, Video, Clock, ChevronLeft, ChevronRight, Search, X, Eye } from 'lucide-react';
+import { Shield, Video, Clock, ChevronLeft, ChevronRight, Search, X, Eye, MessageSquare, BarChart2 } from 'lucide-react';
+import {
+  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+  PieChart, Pie, Cell, Legend
+} from 'recharts';
 import { adminAPI } from '../services/api';
 import { useUiStore } from '../store/uiStore';
 import Badge from '../components/ui/Badge';
@@ -84,6 +88,38 @@ export default function AdminDashboard() {
       )
     : historySessions;
 
+  const CHART_COLORS = { active: '#10B981', ended: '#3B82F6', waiting: '#F59E0B' };
+
+  const totalHistorySessions = historySessions.length;
+  const totalActiveSessions = liveSessions.length;
+  const avgDuration = historySessions.length > 0
+    ? Math.round(historySessions.reduce((sum, s) => sum + (s.duration_seconds || 0), 0) / historySessions.length / 60)
+    : 0;
+
+  const last7Days = Array.from({ length: 7 }, (_, i) => {
+    const d = new Date();
+    d.setDate(d.getDate() - (6 - i));
+    return { day: d.toLocaleDateString('en-US', { weekday: 'short' }), date: d.toDateString(), sessions: 0 };
+  });
+  historySessions.forEach(s => {
+    const sd = new Date(s.created_at).toDateString();
+    const found = last7Days.find(d => d.date === sd);
+    if (found) found.sessions++;
+  });
+
+  const pieData = [
+    { name: 'Active', value: totalActiveSessions, color: CHART_COLORS.active },
+    { name: 'Ended', value: historySessions.filter(s => s.status === 'ended').length, color: CHART_COLORS.ended },
+    { name: 'Waiting', value: historySessions.filter(s => s.status === 'waiting').length, color: CHART_COLORS.waiting },
+  ].filter(d => d.value > 0);
+
+  const statCards = [
+    { label: 'Total Sessions', value: totalHistorySessions, icon: BarChart2, color: 'text-blue-500', bg: 'bg-blue-500/10' },
+    { label: 'Active Sessions', value: totalActiveSessions, icon: Video, color: 'text-green-500', bg: 'bg-green-500/10' },
+    { label: 'Total Messages', value: 0, icon: MessageSquare, color: 'text-purple-500', bg: 'bg-purple-500/10' },
+    { label: 'Avg Duration', value: `${avgDuration}m`, icon: Clock, color: 'text-amber-500', bg: 'bg-amber-500/10' },
+  ];
+
   return (
     <div className="max-w-7xl mx-auto">
       <div className="flex items-center justify-between mb-8">
@@ -98,6 +134,75 @@ export default function AdminDashboard() {
           {liveSessions.length} Live Sessions
         </Badge>
       </div>
+
+      {/* Stat Cards */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        {statCards.map(({ label, value, icon: Icon, color, bg }) => (
+          <div key={label} className="bg-bg-surface rounded-xl p-4 flex items-center gap-4">
+            <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${bg}`}>
+              <Icon className={`w-5 h-5 ${color}`} />
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-text-primary">{value}</p>
+              <p className="text-xs text-text-secondary">{label}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Charts */}
+      {!isLoading && (historySessions.length > 0 || liveSessions.length > 0) && (
+        <div className="grid lg:grid-cols-2 gap-6 mb-8">
+          {/* Sessions over time */}
+          <div className="bg-bg-surface rounded-xl p-5">
+            <h3 className="text-base font-semibold text-text-primary mb-4">Sessions Over Time (Last 7 Days)</h3>
+            <ResponsiveContainer width="100%" height={220}>
+              <LineChart data={last7Days} margin={{ top: 4, right: 16, left: -20, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+                <XAxis dataKey="day" tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: 12 }} tickLine={false} axisLine={false} />
+                <YAxis allowDecimals={false} tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: 12 }} tickLine={false} axisLine={false} />
+                <Tooltip
+                  contentStyle={{ background: '#1e2130', border: 'none', borderRadius: 8, color: '#fff' }}
+                  itemStyle={{ color: '#fff' }}
+                />
+                <Line type="monotone" dataKey="sessions" stroke="#3B82F6" strokeWidth={2} dot={{ r: 3, fill: '#3B82F6' }} />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+
+          {/* Status breakdown */}
+          <div className="bg-bg-surface rounded-xl p-5">
+            <h3 className="text-base font-semibold text-text-primary mb-4">Session Status Breakdown</h3>
+            {pieData.length > 0 ? (
+              <ResponsiveContainer width="100%" height={220}>
+                <PieChart>
+                  <Pie
+                    data={pieData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={55}
+                    outerRadius={90}
+                    paddingAngle={3}
+                    dataKey="value"
+                    label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                  >
+                    {pieData.map((entry) => (
+                      <Cell key={entry.name} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip
+                    contentStyle={{ background: '#1e2130', border: 'none', borderRadius: 8, color: '#fff' }}
+                    formatter={(v, name) => [v, name]}
+                  />
+                  <Legend wrapperStyle={{ fontSize: 12, color: 'rgba(255,255,255,0.5)' }} />
+                </PieChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="flex items-center justify-center h-[220px] text-text-muted text-sm">No data yet</div>
+            )}
+          </div>
+        </div>
+      )}
 
       <section className="mb-10">
         <h2 className="text-lg font-semibold text-text-primary mb-4">Live Sessions</h2>
