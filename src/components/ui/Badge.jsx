@@ -1,10 +1,10 @@
 const variants = {
-  default: 'bg-white/6 text-gray-400 border border-white/8',
-  live: 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30',
-  warning: 'bg-amber-500/15 text-amber-400 border border-amber-500/30',
-  error: 'bg-red-500/15 text-red-400 border border-red-500/30',
-  idle: 'bg-gray-500/15 text-gray-400 border border-gray-500/20',
-  primary: 'bg-blue-500/15 text-blue-400 border border-blue-500/30',
+  default: 'bg-white/5 text-gray-400 border border-white/8',
+  live: 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/25 shadow-sm shadow-emerald-500/5',
+  warning: 'bg-amber-500/10 text-amber-400 border border-amber-500/25 shadow-sm shadow-amber-500/5',
+  error: 'bg-red-500/10 text-red-400 border border-red-500/25 shadow-sm shadow-red-500/5',
+  idle: 'bg-gray-500/10 text-gray-400 border border-gray-500/15',
+  primary: 'bg-blue-500/10 text-blue-400 border border-blue-500/25 shadow-sm shadow-blue-500/5',
 };
 
 const sizes = {
@@ -25,6 +25,7 @@ export default function Badge({
       className={`
         inline-flex items-center gap-1.5
         font-medium rounded-full
+        transition-all duration-300 hover:scale-105 cursor-default
         ${variants[variant]}
         ${sizes[size]}
         ${pulse ? 'animate-pulse-recording' : ''}
@@ -32,7 +33,7 @@ export default function Badge({
       `}
     >
       {variant === 'live' && (
-        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 status-ripple inline-block" />
       )}
       {children}
     </span>

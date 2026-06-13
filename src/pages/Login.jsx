@@ -37,28 +37,35 @@ export default function Login() {
       <div className="absolute inset-0 bg-orb pointer-events-none" />
       <div className="absolute bottom-0 left-0 right-0 h-64 bg-orb-warm pointer-events-none" />
 
-      {/* Glass card */}
-      <div className="relative w-full max-w-sm animate-fade-in">
-        <div className="glass-card p-8">
+      {/* Floating animated orbs */}
+      <div className="absolute top-10 left-10 floating-orb orb-blue animate-float-slow" />
+      <div className="absolute bottom-10 right-10 floating-orb orb-indigo animate-float-slow-reverse" />
+
+      {/* Glass card wrapper with perspective */}
+      <div className="relative w-full max-w-sm perspective-1000 animate-slide-up">
+        <div className="glass-card-premium p-8 card-3d">
           {/* Logo */}
-          <div className="text-center mb-8">
-            <img
-              src="/icon.png"
-              alt="SupportCast"
-              className="w-14 h-14 mx-auto mb-4 rounded-2xl object-cover"
-            />
-            <h1 className="text-2xl font-bold text-white tracking-tight">SupportCast</h1>
-            <p className="text-gray-500 mt-1">Sign in to your agent account</p>
+          <div className="text-center mb-8 animate-fade-in animation-delay-75">
+            <div className="relative inline-block group">
+              <span className="absolute -inset-1 rounded-2xl bg-blue-500/30 blur-md opacity-75 group-hover:opacity-100 transition-opacity duration-300 animate-pulse" />
+              <img
+                src="/icon.png"
+                alt="SupportCast"
+                className="relative w-14 h-14 mx-auto mb-4 rounded-2xl object-cover transition-transform duration-300 group-hover:scale-105"
+              />
+            </div>
+            <h1 className="text-2xl font-bold text-white tracking-tight mt-2">SupportCast</h1>
+            <p className="text-gray-400/80 mt-1 text-sm">Sign in to your agent account</p>
           </div>
 
           {error && (
-            <div className="mb-5 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
+            <div className="mb-5 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm animate-wiggle">
               {error}
             </div>
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
+            <div className="animate-fade-in animation-delay-100">
               <label htmlFor="email" className="block text-sm font-medium text-gray-400 mb-1.5">
                 Email
               </label>
@@ -73,7 +80,7 @@ export default function Login() {
               />
             </div>
 
-            <div>
+            <div className="animate-fade-in animation-delay-150">
               <label htmlFor="password" className="block text-sm font-medium text-gray-400 mb-1.5">
                 Password
               </label>
@@ -88,13 +95,15 @@ export default function Login() {
               />
             </div>
 
-            <Button type="submit" className="w-full mt-2" disabled={isLoading}>
-              {isLoading ? <Spinner size="sm" /> : 'Sign In'}
-            </Button>
+            <div className="animate-fade-in animation-delay-200">
+              <Button type="submit" className="w-full mt-2" disabled={isLoading}>
+                {isLoading ? <Spinner size="sm" /> : 'Sign In'}
+              </Button>
+            </div>
           </form>
         </div>
 
-        <p className="text-center mt-5 text-gray-600 text-sm">
+        <p className="text-center mt-5 text-gray-500/80 text-sm animate-fade-in animation-delay-300">
           Joining a call? Use your invite link instead.
         </p>
       </div>

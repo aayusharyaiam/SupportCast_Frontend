@@ -55,19 +55,19 @@ export default function InviteModal({ session, onClose }) {
           type="text"
           value={inviteLink}
           readOnly
-          className="flex-1 px-3 py-2 rounded-lg bg-bg-base border border-bg-elevated text-text-primary text-sm"
+          className="glass-input flex-1 text-sm bg-bg-base/30 focus:ring-0 focus:border-white/20"
         />
-        <Button onClick={handleCopy} variant="secondary" size="sm">
+        <Button onClick={handleCopy} variant={copied ? 'success' : 'secondary'} size="sm" className="h-10 min-w-[90px]">
           {copied ? (
-            <>
+            <span className="flex items-center gap-1.5 animate-scale-bounce text-emerald-400">
               <Check className="w-4 h-4" />
               Copied
-            </>
+            </span>
           ) : (
-            <>
+            <span className="flex items-center gap-1.5">
               <Copy className="w-4 h-4" />
               Copy
-            </>
+            </span>
           )}
         </Button>
       </div>

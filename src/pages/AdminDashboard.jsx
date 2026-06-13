@@ -167,15 +167,19 @@ export default function AdminDashboard() {
       </div>
 
       {/* Stat cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        {statCards.map(({ label, value, icon: Icon, color, bg, border }) => (
-          <div key={label} className={`glass-card p-4 flex items-center gap-4`}>
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8 perspective-1000">
+        {statCards.map(({ label, value, icon: Icon, color, bg, border }, idx) => (
+          <div
+            key={label}
+            className={`glass-card-premium p-4 flex items-center gap-4 card-3d animate-slide-up`}
+            style={{ animationDelay: `${idx * 75}ms` }}
+          >
             <div className={`w-10 h-10 rounded-xl ${bg} border ${border} flex items-center justify-center shrink-0`}>
               <Icon className={`w-5 h-5 ${color}`} />
             </div>
             <div>
-              <p className="text-2xl font-bold text-white">{value}</p>
-              <p className="text-xs text-gray-500">{label}</p>
+              <p className="text-2xl font-bold text-white tracking-tight">{value}</p>
+              <p className="text-xs text-gray-400/80">{label}</p>
             </div>
           </div>
         ))}
@@ -183,8 +187,8 @@ export default function AdminDashboard() {
 
       {/* Charts */}
       {!isLoading && (historySessions.length > 0 || liveSessions.length > 0) && (
-        <div className="grid lg:grid-cols-2 gap-5 mb-8">
-          <div className="glass-card p-5">
+        <div className="grid lg:grid-cols-2 gap-5 mb-8 animate-fade-in animation-delay-300">
+          <div className="glass-card-premium p-5">
             <h3 className="text-sm font-semibold text-gray-300 mb-4">Sessions Over Time (Last 7 Days)</h3>
             <ResponsiveContainer width="100%" height={200}>
               <LineChart data={last7Days} margin={{ top: 0, right: 8, left: -24, bottom: 0 }}>
@@ -197,7 +201,7 @@ export default function AdminDashboard() {
             </ResponsiveContainer>
           </div>
 
-          <div className="glass-card p-5">
+          <div className="glass-card-premium p-5">
             <h3 className="text-sm font-semibold text-gray-300 mb-4">Session Status Breakdown</h3>
             {pieData.length > 0 ? (
               <ResponsiveContainer width="100%" height={200}>
@@ -218,12 +222,12 @@ export default function AdminDashboard() {
       )}
 
       {/* Live sessions */}
-      <section className="mb-8">
+      <section className="mb-8 animate-fade-in animation-delay-500">
         <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-4">Live Sessions</h2>
         {liveSessions.length === 0 ? (
           <EmptyState icon={Video} title="No active sessions" description="All support sessions have ended" />
         ) : (
-          <div className="glass-card overflow-hidden">
+          <div className="glass-table overflow-hidden bg-bg-surface/50 backdrop-blur-md">
             <table className="w-full">
               <thead>
                 <tr className="border-b border-white/6">
@@ -251,7 +255,7 @@ export default function AdminDashboard() {
       </section>
 
       {/* Session history */}
-      <section>
+      <section className="mb-8 animate-fade-in animation-delay-700">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider">Session History</h2>
           <div className="flex items-center gap-2">
@@ -279,7 +283,7 @@ export default function AdminDashboard() {
           <EmptyState icon={Clock} title="No sessions found" description={searchQuery ? 'Try a different search term' : 'Past sessions will appear here'} />
         ) : (
           <>
-            <div className="glass-card overflow-hidden mb-4">
+            <div className="glass-table overflow-hidden bg-bg-surface/50 backdrop-blur-md mb-4">
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-white/6">
@@ -332,7 +336,7 @@ export default function AdminDashboard() {
       </section>
 
       {/* Agent Management */}
-      <section>
+      <section className="mb-8 animate-fade-in animation-delay-700">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider">Agent Management</h2>
           <Button variant="secondary" size="sm" onClick={() => setShowCreateAgent(true)}>
@@ -344,7 +348,7 @@ export default function AdminDashboard() {
         {agents.length === 0 ? (
           <EmptyState icon={Users} title="No agents found" description="Create an agent to get started" />
         ) : (
-          <div className="glass-card overflow-hidden">
+          <div className="glass-table overflow-hidden">
             <table className="w-full">
               <thead>
                 <tr className="border-b border-white/6">

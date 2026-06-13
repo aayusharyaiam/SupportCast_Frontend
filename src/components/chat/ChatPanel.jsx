@@ -17,7 +17,7 @@ export default function ChatPanel({ sessionId, onClose }) {
   };
 
   return (
-    <div className="w-80 bg-[#0D1220]/80 backdrop-blur-md border-l border-white/[0.08] flex flex-col">
+    <div className="w-80 bg-[#0D1220]/80 backdrop-blur-md border-l border-white/[0.08] flex flex-col animate-slide-in-right shadow-[-10px_0_30px_rgba(0,0,0,0.2)]">
       <div className="h-14 px-4 flex items-center justify-between border-b border-white/[0.06]">
         <h2 className="font-semibold text-gray-200">Chat</h2>
         <button

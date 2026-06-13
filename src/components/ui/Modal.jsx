@@ -56,7 +56,7 @@ export default function Modal({
       aria-labelledby="modal-title"
     >
       <div
-        className="fixed inset-0 bg-black/60 backdrop-blur-sm"
+        className="fixed inset-0 bg-black/60 backdrop-blur-sm animate-fade-in"
         onClick={closeOnOverlay ? onClose : undefined}
       />
 
@@ -66,7 +66,7 @@ export default function Modal({
           relative w-full ${sizes[size]}
           glass-elevated rounded-xl
           shadow-2xl
-          animate-fade-in
+          animate-scale-in
         `}
       >
         <div className="flex items-center justify-between p-4 border-b border-white/[0.06]">

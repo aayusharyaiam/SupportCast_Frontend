@@ -60,37 +60,43 @@ export default function JoinFlow() {
       <div className="absolute inset-0 bg-dotgrid pointer-events-none" />
       <div className="absolute inset-0 bg-orb pointer-events-none" />
 
-      <div className="relative w-full max-w-sm animate-fade-in">
+      {/* Floating background orbs */}
+      <div className="absolute top-10 right-10 floating-orb orb-indigo animate-float-slow" />
+      <div className="absolute bottom-10 left-10 floating-orb orb-emerald animate-float-slow-reverse" />
+
+      <div className="relative w-full max-w-sm perspective-1000 animate-slide-up">
         {/* Step dots */}
-        <div className="flex items-center justify-center gap-2 mb-8">
+        <div className="flex items-center justify-center gap-2.5 mb-8">
           {[0, 1].map((i) => (
             <div
               key={i}
               className={`w-2 h-2 rounded-full transition-all duration-300 ${
-                i === stepIndex ? 'w-6 bg-blue-500' : 'bg-white/15'
+                i === stepIndex
+                  ? 'w-6 bg-blue-500 shadow-lg shadow-blue-500/50'
+                  : 'bg-white/15'
               }`}
             />
           ))}
         </div>
 
-        <div className="glass-card p-8">
+        <div className="glass-card-premium p-8 card-3d">
           {step === 'name' && (
-            <>
-              <div className="text-center mb-8">
-                <div className="w-14 h-14 mx-auto mb-4 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center">
+            <div className="space-y-6">
+              <div className="text-center animate-slide-up">
+                <div className="w-14 h-14 mx-auto mb-4 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shadow-inner animate-float-slow">
                   <User className="w-7 h-7 text-blue-400" />
                 </div>
-                <h1 className="text-xl font-bold text-white">Join Support Call</h1>
-                <p className="text-gray-500 mt-1.5">What should we call you?</p>
+                <h1 className="text-xl font-bold text-white tracking-tight">Join Support Call</h1>
+                <p className="text-gray-400/80 mt-1.5 text-sm">What should we call you?</p>
               </div>
 
               {error && (
-                <div className="mb-5 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
+                <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm animate-wiggle">
                   {error}
                 </div>
               )}
 
-              <form onSubmit={handleNameSubmit} className="space-y-4">
+              <form onSubmit={handleNameSubmit} className="space-y-4 animate-slide-up animation-delay-100">
                 <input
                   type="text"
                   value={name}
@@ -100,28 +106,28 @@ export default function JoinFlow() {
                   className="glass-input w-full text-center text-lg py-3"
                   placeholder="Your name"
                 />
-                <Button type="submit" className="w-full" disabled={isLoading || !name.trim()}>
+                <Button type="submit" className="w-full mt-2" disabled={isLoading || !name.trim()}>
                   {isLoading ? <Spinner size="sm" /> : (
                     <span className="flex items-center gap-2">Continue <ArrowRight className="w-4 h-4" /></span>
                   )}
                 </Button>
               </form>
-            </>
+            </div>
           )}
 
           {step === 'permission' && (
-            <>
-              <div className="text-center mb-8">
-                <div className="w-14 h-14 mx-auto mb-4 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center">
+            <div className="space-y-6">
+              <div className="text-center animate-slide-up">
+                <div className="w-14 h-14 mx-auto mb-4 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shadow-inner animate-float-slow">
                   <Video className="w-7 h-7 text-blue-400" />
                 </div>
-                <h1 className="text-xl font-bold text-white mb-2">Ready to Join?</h1>
-                <p className="text-gray-500 text-sm">
+                <h1 className="text-xl font-bold text-white tracking-tight">Ready to Join?</h1>
+                <p className="text-gray-400/80 text-sm">
                   Camera and microphone access will be requested when you join.
                 </p>
               </div>
 
-              <div className="flex gap-3">
+              <div className="flex gap-3 animate-slide-up animation-delay-100">
                 <Button variant="secondary" className="flex-1" onClick={() => setStep('name')}>
                   Back
                 </Button>
@@ -131,10 +137,10 @@ export default function JoinFlow() {
                 </Button>
               </div>
 
-              <p className="text-center text-gray-600 text-xs mt-4">
+              <p className="text-center text-gray-500/80 text-xs mt-4 animate-fade-in animation-delay-200">
                 You can join with audio only if you prefer.
               </p>
-            </>
+            </div>
           )}
         </div>
       </div>

@@ -69,25 +69,29 @@ export default function Dashboard() {
       <JudgeGuide />
 
       {/* Stat cards */}
-      <div className="grid grid-cols-3 gap-4 mb-8">
-        {statCards.map(({ label, value, icon: Icon }) => (
-          <div key={label} className="glass-card p-4 flex items-center gap-4">
-            <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/8 flex items-center justify-center shrink-0">
-              <Icon className="w-5 h-5 text-blue-400" />
+      <div className="grid grid-cols-3 gap-4 mb-8 perspective-1000">
+        {statCards.map(({ label, value, icon: Icon }, idx) => (
+          <div
+            key={label}
+            className={`glass-card-premium p-4 flex items-center gap-4 card-3d animate-slide-up`}
+            style={{ animationDelay: `${idx * 100}ms` }}
+          >
+            <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0 shadow-inner group-hover:scale-110 transition-transform duration-300">
+              <Icon className="w-5 h-5 text-blue-400 animate-pulse-recording" style={{ animationDuration: '3s' }} />
             </div>
             <div>
-              <p className="text-2xl font-bold text-white">{value}</p>
-              <p className="text-xs text-gray-500">{label}</p>
+              <p className="text-2xl font-bold text-white tracking-tight animate-scale-in">{value}</p>
+              <p className="text-xs text-gray-400/80">{label}</p>
             </div>
           </div>
         ))}
       </div>
 
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-6 animate-fade-in animation-delay-300">
         <div>
-          <h1 className="text-xl font-bold text-white">Sessions</h1>
-          <p className="text-sm text-gray-500 mt-0.5">Manage your support sessions</p>
+          <h1 className="text-xl font-bold text-white tracking-tight">Sessions</h1>
+          <p className="text-sm text-gray-400/80 mt-0.5">Manage your support sessions</p>
         </div>
         <Button onClick={handleCreateSession}>
           <Plus className="w-4 h-4" />
@@ -115,38 +119,48 @@ export default function Dashboard() {
       ) : (
         <div className="space-y-8">
           {activeSessions.length > 0 && (
-            <section>
+            <section className="animate-fade-in animation-delay-300">
               <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-4 flex items-center gap-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 status-ripple inline-block" />
                 Active Sessions
               </h2>
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {activeSessions.map((session) => (
-                  <SessionCard
+                {activeSessions.map((session, index) => (
+                  <div
                     key={session.id}
-                    session={session}
-                    onJoin={() => navigate(`/session/${session.id}`)}
-                    onEnd={() => handleEndSession(session.id)}
-                    onShare={() => setInviteModalSession(session)}
-                  />
+                    className="animate-slide-up"
+                    style={{ animationDelay: `${index * 75}ms` }}
+                  >
+                    <SessionCard
+                      session={session}
+                      onJoin={() => navigate(`/session/${session.id}`)}
+                      onEnd={() => handleEndSession(session.id)}
+                      onShare={() => setInviteModalSession(session)}
+                    />
+                  </div>
                 ))}
               </div>
             </section>
           )}
 
           {pastSessions.length > 0 && (
-            <section>
+            <section className="animate-fade-in animation-delay-500">
               <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-4 flex items-center gap-2">
                 <Clock className="w-3.5 h-3.5" />
                 Past Sessions
               </h2>
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {pastSessions.map((session) => (
-                  <SessionCard
+                {pastSessions.map((session, index) => (
+                  <div
                     key={session.id}
-                    session={session}
-                    onView={() => navigate(`/session/${session.id}/ended`)}
-                  />
+                    className="animate-slide-up"
+                    style={{ animationDelay: `${index * 50}ms` }}
+                  >
+                    <SessionCard
+                      session={session}
+                      onView={() => navigate(`/session/${session.id}/ended`)}
+                    />
+                  </div>
                 ))}
               </div>
             </section>

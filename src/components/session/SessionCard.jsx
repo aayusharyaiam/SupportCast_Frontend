@@ -23,7 +23,7 @@ export default function SessionCard({ session, onJoin, onEnd, onShare, onView })
   };
 
   return (
-    <div className="glass-card p-5 hover:border-white/16 transition-all duration-200 group">
+    <div className="glass-card-premium p-5 card-3d group">
       <div className="flex items-start justify-between mb-4">
         <div>
           <span className="font-mono text-xs text-gray-500">
@@ -42,7 +42,7 @@ export default function SessionCard({ session, onJoin, onEnd, onShare, onView })
           </div>
         </div>
         {isActive && (
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 status-ripple inline-block" />
         )}
       </div>
 

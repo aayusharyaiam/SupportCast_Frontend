@@ -4,31 +4,36 @@ const variants = {
   primary: [
     'bg-gradient-to-br from-blue-500 to-blue-600',
     'hover:from-blue-400 hover:to-blue-500',
-    'text-white shadow-lg shadow-blue-500/20',
+    'text-white shadow-lg shadow-blue-500/20 hover:shadow-blue-500/30 hover:shadow-xl',
+    'hover:-translate-y-0.5',
   ].join(' '),
   secondary: [
-    'bg-white/8',
-    'hover:bg-white/12',
-    'text-gray-200',
-    'border border-white/10',
-  ].join(' '),
-  danger: [
-    'bg-red-500/15',
-    'hover:bg-red-500/25',
-    'text-red-400',
-    'border border-red-500/30',
-  ].join(' '),
-  ghost: [
     'bg-white/5',
     'hover:bg-white/10',
-    'text-gray-400',
-    'border border-white/8',
+    'text-gray-200',
+    'border border-white/8 hover:border-white/20',
+    'hover:-translate-y-0.5 hover:shadow-md hover:shadow-black/20',
+  ].join(' '),
+  danger: [
+    'bg-red-500/10',
+    'hover:bg-red-500/20',
+    'text-red-400',
+    'border border-red-500/20 hover:border-red-500/40',
+    'hover:-translate-y-0.5 hover:shadow-md hover:shadow-red-500/10',
+  ].join(' '),
+  ghost: [
+    'bg-white/3',
+    'hover:bg-white/8',
+    'text-gray-400 hover:text-gray-200',
+    'border border-white/5 hover:border-white/10',
+    'hover:-translate-y-0.5',
   ].join(' '),
   success: [
-    'bg-emerald-500/15',
-    'hover:bg-emerald-500/25',
+    'bg-emerald-500/10',
+    'hover:bg-emerald-500/20',
     'text-emerald-400',
-    'border border-emerald-500/30',
+    'border border-emerald-500/20 hover:border-emerald-500/40',
+    'hover:-translate-y-0.5 hover:shadow-md hover:shadow-emerald-500/10',
   ].join(' '),
 };
 
@@ -57,9 +62,10 @@ const Button = forwardRef(({
       className={`
         inline-flex items-center justify-center gap-2
         font-medium rounded-xl
-        transition-all duration-150
+        transition-all duration-200 ease-out transform
+        active:scale-95
         focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:ring-offset-2 focus:ring-offset-[#080C14]
-        disabled:opacity-40 disabled:cursor-not-allowed
+        disabled:opacity-40 disabled:cursor-not-allowed disabled:transform-none
         ${variants[variant]}
         ${sizes[size]}
         ${className}

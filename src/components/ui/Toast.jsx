@@ -29,21 +29,28 @@ export default function ToastContainer() {
     <>
       {toasts.length > 0 && (
         <div className="fixed bottom-4 right-4 z-[100] flex flex-col gap-2 max-w-sm">
+          <style>{`
+            @keyframes toast-progress {
+              from { width: 100%; }
+              to { width: 0%; }
+            }
+          `}</style>
           {toasts.map((toast) => {
             const Icon = icons[toast.type] || Info;
+            const duration = toast.duration !== undefined ? toast.duration : 4000;
 
             return (
               <div
                 key={toast.id}
                 className={`
-                  flex items-start gap-3 p-4
+                  relative flex items-start gap-3 p-4 pr-10
                   rounded-lg border
-                  shadow-lg
-                  animate-fade-in
+                  shadow-lg overflow-hidden
+                  animate-slide-in-right
                   ${styles[toast.type]}
                 `}
               >
-                <Icon className="w-5 h-5 flex-shrink-0 mt-0.5" />
+                <Icon className="w-5 h-5 flex-shrink-0 mt-0.5 animate-bounce" style={{ animationIterationCount: 2, animationDuration: '0.8s' }} />
                 <div className="flex-1">
                   <p className="text-sm text-gray-200">{toast.message}</p>
                   {toast.details && (
@@ -58,11 +65,19 @@ export default function ToastContainer() {
                 </div>
                 <button
                   onClick={() => removeToast(toast.id)}
-                  className="flex-shrink-0 p-0.5 rounded hover:bg-white/10 transition-colors"
+                  className="absolute top-3 right-3 flex-shrink-0 p-0.5 rounded hover:bg-white/10 transition-colors"
                   aria-label="Dismiss"
                 >
                   <X className="w-4 h-4" />
                 </button>
+                {duration > 0 && (
+                  <div
+                    className="absolute bottom-0 left-0 h-0.5 bg-white/20"
+                    style={{
+                      animation: `toast-progress ${duration}ms linear forwards`
+                    }}
+                  />
+                )}
               </div>
             );
           })}

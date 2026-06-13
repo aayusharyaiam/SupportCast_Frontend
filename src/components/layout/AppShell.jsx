@@ -8,17 +8,21 @@ export default function AppShell({ children }) {
   const toggleSidebar = useUiStore((state) => state.toggleSidebar);
 
   return (
-    <div className="flex h-screen bg-bg-base">
+    <div className="flex h-screen bg-bg-base relative overflow-hidden">
+      {/* Background visual elements */}
+      <div className="absolute top-[-10%] left-[20%] floating-orb orb-blue opacity-30 animate-float-slow" />
+      <div className="absolute bottom-[10%] right-[-10%] floating-orb orb-indigo opacity-30 animate-float-slow-reverse" />
+
       <Sidebar />
 
       <div
         className={`
-          flex-1 flex flex-col
-          transition-all duration-300
-          ${isSidebarOpen ? 'ml-64' : 'ml-16'}
+          flex-1 flex flex-col relative z-10 overflow-hidden
+          transition-all duration-300 ease-in-out
+          ${isSidebarOpen ? 'ml-60' : 'ml-16'}
         `}
       >
-        <header className="h-16 bg-[#0D1220]/70 backdrop-blur-md border-b border-white/[0.08] flex items-center px-4">
+        <header className="h-16 bg-[#0D1220]/40 backdrop-blur-md border-b border-white/[0.06] flex items-center px-4">
           <button
             onClick={toggleSidebar}
             className="p-2 rounded-lg text-text-secondary hover:text-text-primary hover:bg-bg-elevated transition-colors lg:hidden"
@@ -30,7 +34,7 @@ export default function AppShell({ children }) {
           <div className="flex-1" />
         </header>
 
-        <main className="flex-1 overflow-auto p-6">
+        <main className="flex-1 overflow-auto p-6 md:p-8">
           {children || <Outlet />}
         </main>
       </div>
