@@ -60,40 +60,59 @@ export default function SessionView() {
   } = useRecording(sessionId, socket?.socket || null);
 
   const [isChatOpen, setIsChatOpen] = useState(false);
-  const [remoteStream, setRemoteStream] = useState(null);
+  const [remotePeers, setRemotePeers] = useState({});
   const [recvTransport, setRecvTransport] = useState(null);
-  const remoteStreamRef = useRef(new MediaStream());
+  const remoteStreamsRef = useRef(new Map());
   const consumedProducerIdsRef = useRef(new Set());
   const pendingProducerIdsRef = useRef(new Set());
 
   const isAgent = joinedData?.role === 'agent' || joinedData?.role === 'admin';
   const remoteParticipant = useParticipantStore((state) => state.remoteParticipant);
-  const participantStatus = remoteParticipant
-    ? `${remoteParticipant.name || 'Participant'} joined`
+  const peersCount = Object.keys(remotePeers).length;
+  const participantStatus = peersCount > 0
+    ? `${peersCount} participant${peersCount > 1 ? 's' : ''} joined`
     : 'Waiting for another participant';
 
   const resetRemoteMedia = useCallback(() => {
-    remoteStreamRef.current.getTracks().forEach((track) => track.stop());
-    remoteStreamRef.current = new MediaStream();
+    remoteStreamsRef.current.forEach((stream) => {
+      stream.getTracks().forEach((track) => track.stop());
+    });
+    remoteStreamsRef.current.clear();
     consumedProducerIdsRef.current.clear();
     pendingProducerIdsRef.current.clear();
-    setRemoteStream(null);
+    setRemotePeers({});
   }, []);
 
-  const attachRemoteTrack = useCallback((track) => {
-    const nextStream = new MediaStream(remoteStreamRef.current.getTracks());
+  const attachRemoteTrack = useCallback((track, participantId) => {
+    if (!participantId) return;
+
+    let stream = remoteStreamsRef.current.get(participantId);
+    if (!stream) {
+      stream = new MediaStream();
+      remoteStreamsRef.current.set(participantId, stream);
+    }
+
+    const nextStream = new MediaStream(stream.getTracks());
     nextStream.addTrack(track);
-    remoteStreamRef.current = nextStream;
-    setRemoteStream(nextStream);
+    remoteStreamsRef.current.set(participantId, nextStream);
+
+    setRemotePeers(prev => ({
+      ...prev,
+      [participantId]: {
+        ...prev[participantId],
+        stream: nextStream,
+        id: participantId
+      }
+    }));
   }, []);
 
-  const consumeRemoteProducer = useCallback(async (transport, producerId) => {
+  const consumeRemoteProducer = useCallback(async (transport, producerId, participantId) => {
     if (!transport || !producerId || consumedProducerIdsRef.current.has(producerId)) return;
     consumedProducerIdsRef.current.add(producerId);
 
     try {
       const consumer = await consume(transport, producerId, sessionId, emit);
-      attachRemoteTrack(consumer.track);
+      attachRemoteTrack(consumer.track, participantId);
     } catch (error) {
       consumedProducerIdsRef.current.delete(producerId);
       throw error;
@@ -114,13 +133,13 @@ export default function SessionView() {
       name: localStorage.getItem('displayName') || 'You',
       role: joinedData.role,
     });
-    if (joinedData.participants?.[0]) {
-      setRemoteParticipant({
-        id: joinedData.participants[0].participantId,
-        name: joinedData.participants[0].name,
-        role: joinedData.participants[0].role,
+    if (joinedData.participants?.length > 0) {
+      const newPeers = {};
+      joinedData.participants.forEach(p => {
+        newPeers[p.participantId] = { id: p.participantId, name: p.name, role: p.role, stream: remoteStreamsRef.current.get(p.participantId) || new MediaStream() };
       });
-      showInfo(`${joinedData.participants[0].name || 'Participant'} is already in the call`);
+      setRemotePeers(prev => ({ ...prev, ...newPeers }));
+      showInfo(`${joinedData.participants.length} participant(s) already in the call`);
     }
   }, [joinedData, setSession, setLocalParticipant, setRemoteParticipant, showInfo]);
 
@@ -128,27 +147,40 @@ export default function SessionView() {
     if (!sessionId) return;
 
     const participantJoined = on('participant-joined', (data) => {
-      setRemoteParticipant({
-        id: data.participantId,
-        name: data.name,
-        role: data.role,
-      });
+      setRemotePeers(prev => ({
+        ...prev,
+        [data.participantId]: {
+          id: data.participantId,
+          name: data.name,
+          role: data.role,
+          stream: remoteStreamsRef.current.get(data.participantId) || new MediaStream()
+        }
+      }));
       showInfo(`${data.name} joined the call`);
     });
 
     const participantLeft = on('participant-left', (data) => {
-      clearRemoteParticipant();
-      resetRemoteMedia();
+      setRemotePeers(prev => {
+        const next = { ...prev };
+        delete next[data.participantId];
+        return next;
+      });
+      
+      const stream = remoteStreamsRef.current.get(data.participantId);
+      if (stream) {
+        stream.getTracks().forEach(t => t.stop());
+        remoteStreamsRef.current.delete(data.participantId);
+      }
       showInfo(data.name ? `${data.name} left the call` : 'Participant left the call');
     });
 
     const newProducer = on('new-producer', async (data) => {
       try {
         if (!recvTransport) {
-          pendingProducerIdsRef.current.add(data.producerId);
+          pendingProducerIdsRef.current.add({ producerId: data.producerId, participantId: data.participantId });
           return;
         }
-        await consumeRemoteProducer(recvTransport, data.producerId);
+        await consumeRemoteProducer(recvTransport, data.producerId, data.participantId);
       } catch (error) {
         showError('Failed to receive participant media', getErrorDetails(error));
       }
@@ -181,11 +213,11 @@ export default function SessionView() {
   useEffect(() => {
     if (!recvTransport) return;
 
-    const producerIds = [...pendingProducerIdsRef.current];
+    const pending = [...pendingProducerIdsRef.current];
     pendingProducerIdsRef.current.clear();
 
-    producerIds.forEach((producerId) => {
-      consumeRemoteProducer(recvTransport, producerId).catch(() => {
+    pending.forEach(({ producerId, participantId }) => {
+      consumeRemoteProducer(recvTransport, producerId, participantId).catch(() => {
         showError('Failed to receive participant media');
       });
     });
@@ -245,12 +277,16 @@ export default function SessionView() {
       }
 
       for (const producer of joinedData?.producers || []) {
-        setRemoteParticipant({
-          id: producer.participantId,
-          name: producer.name || 'Participant',
-          role: producer.role || 'participant',
-        });
-        await consumeRemoteProducer(activeRecvTransport, producer.producerId);
+        setRemotePeers(prev => ({
+          ...prev,
+          [producer.participantId]: {
+            ...prev[producer.participantId],
+            id: producer.participantId,
+            name: producer.name || 'Participant',
+            role: producer.role || 'participant'
+          }
+        }));
+        await consumeRemoteProducer(activeRecvTransport, producer.producerId, producer.participantId);
       }
     } catch (error) {
       showError('Failed to join call', getErrorDetails(error));
@@ -278,12 +314,16 @@ export default function SessionView() {
       }
 
       for (const producer of joinedData?.producers || []) {
-        setRemoteParticipant({
-          id: producer.participantId,
-          name: producer.name || 'Participant',
-          role: producer.role || 'participant',
-        });
-        await consumeRemoteProducer(activeRecvTransport, producer.producerId);
+        setRemotePeers(prev => ({
+          ...prev,
+          [producer.participantId]: {
+            ...prev[producer.participantId],
+            id: producer.participantId,
+            name: producer.name || 'Participant',
+            role: producer.role || 'participant'
+          }
+        }));
+        await consumeRemoteProducer(activeRecvTransport, producer.producerId, producer.participantId);
       }
     } catch (error) {
       showError('Failed to join call', getErrorDetails(error));
@@ -355,7 +395,7 @@ export default function SessionView() {
           <div className="flex items-center gap-2">
             <span
               className={`text-xs px-3 py-1 rounded-full border transition-all duration-300 ${
-                remoteParticipant
+                peersCount > 0
                   ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300 animate-scale-bounce'
                   : 'bg-amber-500/10 border-amber-500/30 text-amber-300'
               }`}
@@ -371,8 +411,7 @@ export default function SessionView() {
         <div className="flex-1 min-h-0 p-2 sm:p-3">
           <VideoGrid
             localStream={localStream}
-            remoteStream={remoteStream}
-            remoteParticipant={remoteParticipant}
+            remotePeers={Object.values(remotePeers)}
           />
         </div>
 

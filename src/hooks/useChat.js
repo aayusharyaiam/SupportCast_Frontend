@@ -10,6 +10,7 @@ export function useChat(sessionId) {
   const addMessage = useChatStore((state) => state.addMessage);
   const setMessages = useChatStore((state) => state.setMessages);
   const updateMessageStatus = useChatStore((state) => state.updateMessageStatus);
+  const removeMessage = useChatStore((state) => state.removeMessage);
   const showError = useUiStore((state) => state.showError);
 
   const tempIdCounter = useRef(0);
@@ -37,7 +38,8 @@ export function useChat(sessionId) {
   const sendMessage = useCallback(
     (content) => {
       const tempId = `temp-${++tempIdCounter.current}`;
-      const role = localStorage.getItem('role');
+      const rawRole = localStorage.getItem('role');
+      const role = rawRole === 'admin' ? 'agent' : rawRole;
       const name = localStorage.getItem('displayName') || 'You';
 
       addMessage({
@@ -58,20 +60,26 @@ export function useChat(sessionId) {
             showError('Failed to send message', getErrorDetails(response?.error || error));
             return;
           }
-          if (response?.data) addMessage(response.data);
+          // The server broadcasts 'chat-message' to ALL clients in the room
+          // (including the sender). The upsertMessage in chatStore will match
+          // the optimistic message by content + role and replace it in-place.
+          // We only need to remove the temp message here; the broadcast handler
+          // adds the confirmed one via addMessage → upsertMessage.
+          removeMessage(tempId);
         });
       } else {
         updateMessageStatus(tempId, { pending: false, failed: true });
         showError('Chat is disconnected');
       }
     },
-    [sessionId, socket, addMessage, updateMessageStatus, showError]
+    [sessionId, socket, addMessage, updateMessageStatus, removeMessage, showError]
   );
 
   const shareFile = useCallback(
     async (file) => {
       const tempId = `temp-${++tempIdCounter.current}`;
-      const role = localStorage.getItem('role');
+      const rawRole = localStorage.getItem('role');
+      const role = rawRole === 'admin' ? 'agent' : rawRole;
       const name = localStorage.getItem('displayName') || 'You';
 
       addMessage({
@@ -82,7 +90,6 @@ export function useChat(sessionId) {
         type: 'file',
         file_name: file.name,
         file_size: file.size,
-        file_type: file.type,
         file_url: null,
         created_at: new Date().toISOString(),
         pending: true,
@@ -121,7 +128,8 @@ export function useChat(sessionId) {
                 showError('Failed to share file', getErrorDetails(response?.error || error));
                 return;
               }
-              if (response?.data) addMessage(response.data);
+              // Let the broadcast 'chat-message' event handle adding the confirmed message
+              removeMessage(tempId);
             }
           );
         } else {
@@ -133,7 +141,7 @@ export function useChat(sessionId) {
         showError('Failed to upload file', getErrorDetails(err));
       }
     },
-    [sessionId, socket, addMessage, updateMessageStatus, showError]
+    [sessionId, socket, addMessage, updateMessageStatus, removeMessage, showError]
   );
 
   return {

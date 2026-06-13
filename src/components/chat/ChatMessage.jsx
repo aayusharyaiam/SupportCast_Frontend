@@ -2,7 +2,9 @@ import { FileText } from 'lucide-react';
 
 export default function ChatMessage({ message }) {
   const currentRole = localStorage.getItem('role');
-  const isOwnMessage = message.sender_role === currentRole;
+  const normalizedCurrentRole = currentRole === 'admin' ? 'agent' : currentRole;
+  const normalizedMessageRole = message.sender_role === 'admin' ? 'agent' : message.sender_role;
+  const isOwnMessage = normalizedMessageRole === normalizedCurrentRole;
 
   const formatTime = (timestamp) => {
     return new Date(timestamp).toLocaleTimeString([], {

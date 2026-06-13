@@ -27,6 +27,10 @@ export const useChatStore = create((set, get) => ({
     ),
   })),
 
+  removeMessage: (id) => set((state) => ({
+    messages: state.messages.filter((m) => m.id !== id),
+  })),
+
   clearMessages: () => set({ messages: [] }),
 
   setIsLoading: (isLoading) => set({ isLoading }),
@@ -37,6 +41,10 @@ export const useChatStore = create((set, get) => ({
     return get().messages.filter((m) => m.session_id === sessionId);
   },
 }));
+
+function normalizeRole(role) {
+  return role === 'admin' ? 'agent' : role;
+}
 
 function upsertMessage(messages, message) {
   if (!message) return messages;
@@ -51,7 +59,7 @@ function upsertMessage(messages, message) {
       return false;
     }
 
-    if (m.sender_role !== message.sender_role) {
+    if (normalizeRole(m.sender_role) !== normalizeRole(message.sender_role)) {
       return false;
     }
 

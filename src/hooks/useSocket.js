@@ -5,6 +5,7 @@ import { getErrorDetails, useUiStore } from '../store/uiStore';
 export function useSocket(sessionId) {
   const socketRef = useRef(null);
   const [joinedData, setJoinedData] = useState(null);
+  const isConnecting = useUiStore((state) => state.isConnecting);
   const setIsConnecting = useUiStore((state) => state.setIsConnecting);
   const setConnectionError = useUiStore((state) => state.setConnectionError);
   const showError = useUiStore((state) => state.showError);
@@ -110,5 +111,5 @@ export function useSocket(sessionId) {
     };
   }, []);
 
-  return { emit, on, off, socket: socketRef.current, joinedData };
+  return { emit, on, off, socket: socketRef.current, joinedData, isConnecting };
 }
