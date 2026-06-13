@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef } from 'react';
 import { useChatStore } from '../store/chatStore';
-import { useUiStore } from '../store/uiStore';
+import { getErrorDetails, useUiStore } from '../store/uiStore';
 import { getSocket } from '../services/socket';
 import { sessionAPI } from '../services/api';
 
@@ -9,6 +9,7 @@ export function useChat(sessionId) {
   const messages = useChatStore((state) => state.messages);
   const addMessage = useChatStore((state) => state.addMessage);
   const setMessages = useChatStore((state) => state.setMessages);
+  const updateMessageStatus = useChatStore((state) => state.updateMessageStatus);
   const showError = useUiStore((state) => state.showError);
 
   const tempIdCounter = useRef(0);
@@ -53,12 +54,18 @@ export function useChat(sessionId) {
       if (socket?.connected) {
         socket.emit('send-chat', { sessionId, message: content }, (error, response) => {
           if (error || response?.ok === false) {
-            showError('Failed to send message');
+            updateMessageStatus(tempId, { pending: false, failed: true });
+            showError('Failed to send message', getErrorDetails(response?.error || error));
+            return;
           }
+          if (response?.data) addMessage(response.data);
         });
+      } else {
+        updateMessageStatus(tempId, { pending: false, failed: true });
+        showError('Chat is disconnected');
       }
     },
-    [sessionId, socket, addMessage, showError]
+    [sessionId, socket, addMessage, updateMessageStatus, showError]
   );
 
   const shareFile = useCallback(
@@ -110,16 +117,23 @@ export function useChat(sessionId) {
             },
             (error, response) => {
               if (error || response?.ok === false) {
-                showError('Failed to share file');
+                updateMessageStatus(tempId, { pending: false, failed: true });
+                showError('Failed to share file', getErrorDetails(response?.error || error));
+                return;
               }
+              if (response?.data) addMessage(response.data);
             }
           );
+        } else {
+          updateMessageStatus(tempId, { pending: false, failed: true });
+          showError('Chat is disconnected');
         }
       } catch (err) {
-        showError('Failed to upload file');
+        updateMessageStatus(tempId, { pending: false, failed: true });
+        showError('Failed to upload file', getErrorDetails(err));
       }
     },
-    [sessionId, socket, addMessage, showError]
+    [sessionId, socket, addMessage, updateMessageStatus, showError]
   );
 
   return {

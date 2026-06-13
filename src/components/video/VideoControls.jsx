@@ -14,6 +14,7 @@ export default function VideoControls({
   isAgent,
   onStartRecording,
   onStopRecording,
+  endCallLabel = 'End call',
 }) {
   return (
     <div className="h-20 px-4 flex items-center justify-center gap-4 bg-[#0D1220]/80 backdrop-blur-md border-t border-white/[0.08]">
@@ -89,7 +90,7 @@ export default function VideoControls({
         variant="danger"
         size="icon"
         onClick={onEndCall}
-        aria-label="End call"
+        aria-label={endCallLabel}
       >
         <PhoneOff className="w-5 h-5" />
       </Button>

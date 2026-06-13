@@ -1,12 +1,13 @@
 import { useEffect, useCallback, useRef, useState } from 'react';
 import { getSocket, disconnectSocket } from '../services/socket';
-import { useUiStore } from '../store/uiStore';
+import { getErrorDetails, useUiStore } from '../store/uiStore';
 
 export function useSocket(sessionId) {
   const socketRef = useRef(null);
   const [joinedData, setJoinedData] = useState(null);
   const setIsConnecting = useUiStore((state) => state.setIsConnecting);
   const setConnectionError = useUiStore((state) => state.setConnectionError);
+  const showError = useUiStore((state) => state.showError);
 
   useEffect(() => {
     if (!sessionId) return;
@@ -30,7 +31,9 @@ export function useSocket(sessionId) {
           },
           (error, response) => {
             if (error || response?.ok === false) {
-              setConnectionError(response?.error?.message || error?.message || 'Failed to join session');
+              const message = response?.error?.message || error?.message || 'Failed to join session';
+              setConnectionError(message);
+              showError(message, getErrorDetails(response?.error || error));
               return;
             }
             setJoinedData(response?.data || null);
@@ -39,12 +42,15 @@ export function useSocket(sessionId) {
     };
 
     const onDisconnect = () => {
-      setConnectionError('Disconnected from server');
+      const message = 'Disconnected from server';
+      setConnectionError(message);
+      showError(message);
     };
 
     const onConnectError = (error) => {
       setIsConnecting(false);
       setConnectionError(error.message);
+      showError('Failed to connect to session', getErrorDetails(error));
     };
 
     socket.on('connect', onConnect);
@@ -60,7 +66,7 @@ export function useSocket(sessionId) {
       socket.off('disconnect', onDisconnect);
       socket.off('connect_error', onConnectError);
     };
-  }, [sessionId, setIsConnecting, setConnectionError]);
+  }, [sessionId, setIsConnecting, setConnectionError, showError]);
 
   const emit = useCallback((event, data) => {
     return new Promise((resolve, reject) => {

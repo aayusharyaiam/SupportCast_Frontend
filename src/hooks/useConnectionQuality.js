@@ -47,8 +47,8 @@ export function useConnectionQuality(peerConnection) {
 
       setStats({ packetLoss, jitter: currentJitter });
       setQuality(calculateQuality(packetLoss, currentJitter));
-    } catch (error) {
-      console.error('Failed to get connection stats:', error);
+    } catch {
+      setQuality('poor');
     }
   }, [peerConnection, calculateQuality]);
 

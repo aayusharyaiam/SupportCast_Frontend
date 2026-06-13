@@ -1,13 +1,18 @@
 import { useState } from 'react';
-import { Copy, Check, Link2 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Copy, Check, Link2, Video } from 'lucide-react';
 import Modal from '../ui/Modal';
 import Button from '../ui/Button';
+import { getErrorDetails, useUiStore } from '../../store/uiStore';
 
 export default function InviteModal({ session, onClose }) {
+  const navigate = useNavigate();
   const [copied, setCopied] = useState(false);
+  const showError = useUiStore((state) => state.showError);
 
   const inviteToken = session.invite_token || session.inviteToken;
   const inviteLink = `${window.location.origin}/join?token=${inviteToken}`;
+  const sessionId = session.id || session.session_id;
 
   const handleCopy = async () => {
     try {
@@ -15,8 +20,13 @@ export default function InviteModal({ session, onClose }) {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (error) {
-      console.error('Failed to copy:', error);
+      showError('Failed to copy invite link', getErrorDetails(error));
     }
+  };
+
+  const handleJoin = () => {
+    onClose?.();
+    navigate(`/session/${sessionId}`);
   };
 
   return (
@@ -26,6 +36,10 @@ export default function InviteModal({ session, onClose }) {
       title="Share Invite Link"
       footer={
         <>
+          <Button onClick={handleJoin} disabled={!sessionId}>
+            <Video className="w-4 h-4" />
+            Join Meet
+          </Button>
           <Button variant="secondary" onClick={onClose}>
             Close
           </Button>

@@ -2,7 +2,7 @@ import { Video, Mic, AlertCircle } from 'lucide-react';
 import Button from '../ui/Button';
 import Spinner from '../ui/Spinner';
 
-export default function MediaPermission({ onRequest, isRequesting }) {
+export default function MediaPermission({ onRequest, onRequestAudioOnly, isRequesting, participantStatus }) {
   return (
     <div className="min-h-screen bg-bg-base flex items-center justify-center p-4">
       <div className="max-w-md w-full text-center">
@@ -16,6 +16,12 @@ export default function MediaPermission({ onRequest, isRequesting }) {
         <p className="text-gray-400 mb-8">
           We need access to your camera and microphone for the video call.
         </p>
+
+        {participantStatus && (
+          <div className="mb-6 rounded-lg border border-white/[0.08] bg-white/[0.05] px-4 py-3 text-sm text-gray-300">
+            {participantStatus}
+          </div>
+        )}
 
         <div className="space-y-4">
           <div className="flex items-center gap-4 p-4 rounded-lg bg-white/[0.06] border border-white/[0.08]">
@@ -58,7 +64,7 @@ export default function MediaPermission({ onRequest, isRequesting }) {
             )}
           </Button>
 
-          <Button variant="ghost" className="w-full">
+          <Button variant="ghost" className="w-full" onClick={onRequestAudioOnly}>
             Join with Audio Only
           </Button>
         </div>

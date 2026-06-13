@@ -1,4 +1,5 @@
 import { Component } from 'react';
+import { getErrorDetails, useUiStore } from '../../store/uiStore';
 
 export class ErrorBoundary extends Component {
   constructor(props) {
@@ -11,7 +12,11 @@ export class ErrorBoundary extends Component {
   }
 
   componentDidCatch(error, errorInfo) {
-    console.error('ErrorBoundary caught:', error, errorInfo);
+    useUiStore.getState().showError(
+      'A screen failed to render',
+      [getErrorDetails(error), errorInfo?.componentStack].filter(Boolean).join('\n\n')
+    );
+    this.setState({ errorInfo });
   }
 
   handleRetry = () => {
@@ -32,6 +37,14 @@ export class ErrorBoundary extends Component {
             <p className="text-text-secondary mb-6">
               We encountered an unexpected error. Please try again.
             </p>
+            <details className="mb-6 rounded-lg border border-white/[0.08] bg-black/20 text-left">
+              <summary className="cursor-pointer px-3 py-2 text-sm font-medium text-gray-200">
+                Error details
+              </summary>
+              <pre className="max-h-64 overflow-auto whitespace-pre-wrap break-words px-3 pb-3 text-xs text-gray-400">
+                {[getErrorDetails(this.state.error), this.state.errorInfo?.componentStack].filter(Boolean).join('\n\n')}
+              </pre>
+            </details>
             <button
               onClick={this.handleRetry}
               className="px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white font-medium rounded-lg transition-colors"

@@ -16,6 +16,7 @@ import RecordingBadge from '../components/session/RecordingBadge';
 import MediaPermission from '../components/video/MediaPermission';
 import Button from '../components/ui/Button';
 import Spinner from '../components/ui/Spinner';
+import { getErrorDetails } from '../store/uiStore';
 
 export default function SessionView() {
   const { id: sessionId } = useParams();
@@ -33,12 +34,13 @@ export default function SessionView() {
     isMediaReady,
     isRequestingPermission,
     getUserMedia,
+    getUserMediaAudioOnly,
     toggleAudio: toggleLocalAudio,
     toggleVideo: toggleLocalVideo,
     stopMedia,
     isAudioEnabled,
     isVideoEnabled,
-    isMediaError,
+    mediaError,
   } = useLocalMedia();
 
   const {
@@ -60,8 +62,43 @@ export default function SessionView() {
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [remoteStream, setRemoteStream] = useState(null);
   const [recvTransport, setRecvTransport] = useState(null);
+  const remoteStreamRef = useRef(new MediaStream());
+  const consumedProducerIdsRef = useRef(new Set());
+  const pendingProducerIdsRef = useRef(new Set());
 
-  const isAgent = joinedData?.role === 'agent';
+  const isAgent = joinedData?.role === 'agent' || joinedData?.role === 'admin';
+  const remoteParticipant = useParticipantStore((state) => state.remoteParticipant);
+  const participantStatus = remoteParticipant
+    ? `${remoteParticipant.name || 'Participant'} joined`
+    : 'Waiting for another participant';
+
+  const resetRemoteMedia = useCallback(() => {
+    remoteStreamRef.current.getTracks().forEach((track) => track.stop());
+    remoteStreamRef.current = new MediaStream();
+    consumedProducerIdsRef.current.clear();
+    pendingProducerIdsRef.current.clear();
+    setRemoteStream(null);
+  }, []);
+
+  const attachRemoteTrack = useCallback((track) => {
+    const nextStream = new MediaStream(remoteStreamRef.current.getTracks());
+    nextStream.addTrack(track);
+    remoteStreamRef.current = nextStream;
+    setRemoteStream(nextStream);
+  }, []);
+
+  const consumeRemoteProducer = useCallback(async (transport, producerId) => {
+    if (!transport || !producerId || consumedProducerIdsRef.current.has(producerId)) return;
+    consumedProducerIdsRef.current.add(producerId);
+
+    try {
+      const consumer = await consume(transport, producerId, sessionId, emit);
+      attachRemoteTrack(consumer.track);
+    } catch (error) {
+      consumedProducerIdsRef.current.delete(producerId);
+      throw error;
+    }
+  }, [attachRemoteTrack, consume, emit, sessionId]);
 
   useEffect(() => {
     if (!joinedData) return;
@@ -77,7 +114,15 @@ export default function SessionView() {
       name: localStorage.getItem('displayName') || 'You',
       role: joinedData.role,
     });
-  }, [joinedData, setSession, setLocalParticipant]);
+    if (joinedData.participants?.[0]) {
+      setRemoteParticipant({
+        id: joinedData.participants[0].participantId,
+        name: joinedData.participants[0].name,
+        role: joinedData.participants[0].role,
+      });
+      showInfo(`${joinedData.participants[0].name || 'Participant'} is already in the call`);
+    }
+  }, [joinedData, setSession, setLocalParticipant, setRemoteParticipant, showInfo]);
 
   useEffect(() => {
     if (!sessionId) return;
@@ -93,17 +138,19 @@ export default function SessionView() {
 
     const participantLeft = on('participant-left', (data) => {
       clearRemoteParticipant();
-      setRemoteStream(null);
+      resetRemoteMedia();
       showInfo(data.name ? `${data.name} left the call` : 'Participant left the call');
     });
 
     const newProducer = on('new-producer', async (data) => {
       try {
-        if (!recvTransport) return;
-        const consumer = await consume(recvTransport, data.producerId, sessionId, emit);
-        setRemoteStream(new MediaStream([consumer.track]));
+        if (!recvTransport) {
+          pendingProducerIdsRef.current.add(data.producerId);
+          return;
+        }
+        await consumeRemoteProducer(recvTransport, data.producerId);
       } catch (error) {
-        showError('Failed to receive video');
+        showError('Failed to receive participant media', getErrorDetails(error));
       }
     });
 
@@ -129,7 +176,20 @@ export default function SessionView() {
       participantAudioMuted();
       participantVideoToggled();
     };
-  }, [sessionId, on, setRemoteParticipant, clearRemoteParticipant, showInfo, showError, showSuccess, stopMedia, navigate, consume, emit, recvTransport]);
+  }, [sessionId, on, setRemoteParticipant, clearRemoteParticipant, showInfo, showError, showSuccess, stopMedia, navigate, recvTransport, consumeRemoteProducer, resetRemoteMedia]);
+
+  useEffect(() => {
+    if (!recvTransport) return;
+
+    const producerIds = [...pendingProducerIdsRef.current];
+    pendingProducerIdsRef.current.clear();
+
+    producerIds.forEach((producerId) => {
+      consumeRemoteProducer(recvTransport, producerId).catch(() => {
+        showError('Failed to receive participant media');
+      });
+    });
+  }, [recvTransport, consumeRemoteProducer, showError]);
 
   const handleToggleAudio = useCallback(() => {
     toggleLocalAudio();
@@ -150,10 +210,14 @@ export default function SessionView() {
   }, [stopRecording]);
 
   const handleEndCall = useCallback(() => {
-    emit('end-session', { sessionId });
     stopMedia();
-    navigate(`/session/${sessionId}/ended`);
-  }, [emit, sessionId, stopMedia, navigate]);
+    if (isAgent) {
+      emit('end-session', { sessionId });
+      navigate(`/session/${sessionId}/ended`);
+      return;
+    }
+    navigate(`/session/${sessionId}/ended?left=1`);
+  }, [emit, isAgent, sessionId, stopMedia, navigate]);
 
   const handleJoinCall = useCallback(async () => {
     try {
@@ -181,21 +245,59 @@ export default function SessionView() {
       }
 
       for (const producer of joinedData?.producers || []) {
-        const consumer = await consume(activeRecvTransport, producer.producerId, sessionId, emit);
-        setRemoteStream(new MediaStream([consumer.track]));
+        setRemoteParticipant({
+          id: producer.participantId,
+          name: producer.name || 'Participant',
+          role: producer.role || 'participant',
+        });
+        await consumeRemoteProducer(activeRecvTransport, producer.producerId);
       }
     } catch (error) {
-      showError('Failed to join call');
+      showError('Failed to join call', getErrorDetails(error));
     }
-  }, [sessionId, emit, getUserMedia, initializeDevice, createSendTransport, createRecvTransport, produce, consume, joinedData, showError]);
+  }, [sessionId, emit, getUserMedia, initializeDevice, createSendTransport, createRecvTransport, produce, joinedData, showError, setRemoteParticipant, consumeRemoteProducer]);
+
+  const handleJoinCallAudioOnly = useCallback(async () => {
+    try {
+      const stream = await getUserMediaAudioOnly();
+      if (!stream) return;
+
+      const rtpCaps = await emit('get-rtp-capabilities', { sessionId });
+      await initializeDevice(rtpCaps);
+
+      const sendTransportOptions = await emit('create-transport', { sessionId, direction: 'send' });
+      const sendTransport = await createSendTransport(sendTransportOptions, sessionId, emit);
+
+      const recvTransportOptions = await emit('create-transport', { sessionId, direction: 'recv' });
+      const activeRecvTransport = await createRecvTransport(recvTransportOptions, sessionId, emit);
+      setRecvTransport(activeRecvTransport);
+
+      const audioTrack = stream.getAudioTracks()[0];
+      if (audioTrack) {
+        await produce(sendTransport, audioTrack, 'audio');
+      }
+
+      for (const producer of joinedData?.producers || []) {
+        setRemoteParticipant({
+          id: producer.participantId,
+          name: producer.name || 'Participant',
+          role: producer.role || 'participant',
+        });
+        await consumeRemoteProducer(activeRecvTransport, producer.producerId);
+      }
+    } catch (error) {
+      showError('Failed to join call', getErrorDetails(error));
+    }
+  }, [sessionId, emit, getUserMediaAudioOnly, initializeDevice, createSendTransport, createRecvTransport, produce, joinedData, showError, setRemoteParticipant, consumeRemoteProducer]);
 
   useEffect(() => {
     return () => {
       stopMedia();
+      resetRemoteMedia();
     };
-  }, [stopMedia]);
+  }, [stopMedia, resetRemoteMedia]);
 
-  if (connectionError || isMediaError) {
+  if (connectionError || mediaError) {
     return (
       <div className="min-h-screen bg-bg-base flex items-center justify-center p-4">
         <div className="text-center max-w-md">
@@ -204,6 +306,16 @@ export default function SessionView() {
           </div>
           <h1 className="text-xl font-semibold text-text-primary mb-2">Connection Error</h1>
           <p className="text-text-secondary mb-6">{connectionError || 'Failed to access camera/microphone'}</p>
+          {(connectionError || mediaError) && (
+            <details className="mb-6 rounded-lg border border-white/[0.08] bg-black/20 text-left">
+              <summary className="cursor-pointer px-3 py-2 text-sm font-medium text-gray-200">
+                Error details
+              </summary>
+              <pre className="max-h-64 overflow-auto whitespace-pre-wrap break-words px-3 pb-3 text-xs text-gray-400">
+                {getErrorDetails(mediaError || connectionError)}
+              </pre>
+            </details>
+          )}
           <Button onClick={() => window.location.reload()}>Retry</Button>
         </div>
       </div>
@@ -225,7 +337,9 @@ export default function SessionView() {
     return (
       <MediaPermission
         onRequest={handleJoinCall}
+        onRequestAudioOnly={handleJoinCallAudioOnly}
         isRequesting={isRequestingPermission}
+        participantStatus={participantStatus}
       />
     );
   }
@@ -239,6 +353,15 @@ export default function SessionView() {
             <RecordingBadge />
           </div>
           <div className="flex items-center gap-2">
+            <span
+              className={`text-xs px-3 py-1 rounded-full border ${
+                remoteParticipant
+                  ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300'
+                  : 'bg-amber-500/10 border-amber-500/30 text-amber-300'
+              }`}
+            >
+              {participantStatus}
+            </span>
             <span className="text-sm text-text-secondary">
               {messages.length} messages
             </span>
@@ -246,7 +369,11 @@ export default function SessionView() {
         </div>
 
         <div className="flex-1 p-4">
-          <VideoGrid localStream={localStream} remoteStream={remoteStream} />
+          <VideoGrid
+            localStream={localStream}
+            remoteStream={remoteStream}
+            remoteParticipant={remoteParticipant}
+          />
         </div>
 
         <VideoControls
@@ -261,6 +388,7 @@ export default function SessionView() {
           isAgent={isAgent}
           onStartRecording={handleStartRecording}
           onStopRecording={handleStopRecording}
+          endCallLabel={isAgent ? 'End session' : 'Leave call'}
         />
       </div>
 

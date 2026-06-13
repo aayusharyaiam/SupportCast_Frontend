@@ -2,6 +2,8 @@ import { lazy, Suspense } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import AppShell from './components/layout/AppShell';
 import PageSkeleton from './components/layout/PageSkeleton';
+import ToastContainer from './components/ui/Toast';
+import GlobalErrorHandlers from './components/ui/GlobalErrorHandlers';
 
 const Login = lazy(() => import('./pages/Login'));
 const Dashboard = lazy(() => import('./pages/Dashboard'));
@@ -29,6 +31,7 @@ function ProtectedRoute({ children, requiredRole }) {
 function App() {
   return (
     <Suspense fallback={<PageSkeleton />}>
+      <GlobalErrorHandlers />
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/join" element={<JoinFlow />} />
@@ -84,6 +87,7 @@ function App() {
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>
+      <ToastContainer />
     </Suspense>
   );
 }

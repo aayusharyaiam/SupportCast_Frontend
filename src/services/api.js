@@ -9,7 +9,7 @@ const api = axios.create({
 });
 
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token');
+  const token = localStorage.getItem('token') || localStorage.getItem('socketToken');
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
@@ -68,6 +68,12 @@ export const adminAPI = {
     api.get(`/sessions/${id}`),
   forceEndSession: (id) =>
     api.delete(`/admin/sessions/${id}`),
+  createAgent: ({ email, password, displayName, role }) =>
+    api.post('/admin/agents', { email, password, displayName, role }),
+  getAgents: () =>
+    api.get('/admin/agents'),
+  deleteAgent: (id) =>
+    api.delete(`/admin/agents/${id}`),
 };
 
 export const systemAPI = {

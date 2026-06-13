@@ -1,6 +1,5 @@
 import { Outlet } from 'react-router-dom';
 import Sidebar from './Sidebar';
-import ToastContainer from '../ui/Toast';
 import { useUiStore } from '../../store/uiStore';
 import { Menu } from 'lucide-react';
 
@@ -35,8 +34,6 @@ export default function AppShell({ children }) {
           {children || <Outlet />}
         </main>
       </div>
-
-      <ToastContainer />
     </div>
   );
 }

@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Video } from 'lucide-react';
 import { signInWithPassword } from '../services/supabase';
 import Button from '../components/ui/Button';
 import Spinner from '../components/ui/Spinner';
@@ -43,9 +42,11 @@ export default function Login() {
         <div className="glass-card p-8">
           {/* Logo */}
           <div className="text-center mb-8">
-            <div className="w-14 h-14 mx-auto mb-4 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center">
-              <Video className="w-7 h-7 text-blue-400" />
-            </div>
+            <img
+              src="/icon.png"
+              alt="SupportCast"
+              className="w-14 h-14 mx-auto mb-4 rounded-2xl object-cover"
+            />
             <h1 className="text-2xl font-bold text-white tracking-tight">SupportCast</h1>
             <p className="text-gray-500 mt-1">Sign in to your agent account</p>
           </div>

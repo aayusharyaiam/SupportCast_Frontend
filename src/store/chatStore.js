@@ -8,7 +8,7 @@ export const useChatStore = create((set, get) => ({
   setMessages: (messages) => set({ messages }),
 
   addMessage: (message) => set((state) => ({
-    messages: [...state.messages, message],
+    messages: upsertMessage(state.messages, message),
   })),
 
   addOptimisticMessage: (tempId, message) => set((state) => ({
@@ -37,3 +37,34 @@ export const useChatStore = create((set, get) => ({
     return get().messages.filter((m) => m.session_id === sessionId);
   },
 }));
+
+function upsertMessage(messages, message) {
+  if (!message) return messages;
+
+  const existingIndex = messages.findIndex((m) => m.id === message.id);
+  if (existingIndex >= 0) {
+    return messages.map((m, index) => (index === existingIndex ? { ...m, ...message } : m));
+  }
+
+  const optimisticIndex = messages.findIndex((m) => {
+    if (!m.pending || m.session_id !== message.session_id || m.type !== message.type) {
+      return false;
+    }
+
+    if (m.sender_role !== message.sender_role) {
+      return false;
+    }
+
+    if (message.type === 'file') {
+      return m.file_name === message.file_name && m.file_size === message.file_size;
+    }
+
+    return m.content === message.content;
+  });
+
+  if (optimisticIndex >= 0) {
+    return messages.map((m, index) => (index === optimisticIndex ? message : m));
+  }
+
+  return [...messages, message];
+}

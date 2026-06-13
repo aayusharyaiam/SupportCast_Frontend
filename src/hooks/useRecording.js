@@ -1,7 +1,7 @@
 import { useCallback, useEffect } from 'react';
 import { getSocket } from '../services/socket';
 import { useSessionStore } from '../store/sessionStore';
-import { useUiStore } from '../store/uiStore';
+import { getErrorDetails, useUiStore } from '../store/uiStore';
 
 export function useRecording(sessionId, socket) {
   const activeSocket = socket || getSocket();
@@ -34,7 +34,7 @@ export function useRecording(sessionId, socket) {
 
     const handleError = (error) => {
       if (error.code?.startsWith('RECORDING')) {
-        showError(error.message);
+        showError(error.message, getErrorDetails(error));
         setRecordingStatus('error');
       }
     };
@@ -52,7 +52,10 @@ export function useRecording(sessionId, socket) {
     if (activeSocket?.connected && sessionId) {
       activeSocket.timeout(10000).emit('start-recording', { sessionId }, (error, response) => {
         if (error || response?.ok === false) {
-          showError(response?.error?.message || error?.message || 'Failed to start recording');
+          showError(
+            response?.error?.message || error?.message || 'Failed to start recording',
+            getErrorDetails(response?.error || error)
+          );
           setRecordingStatus('error');
         }
       });
@@ -63,7 +66,10 @@ export function useRecording(sessionId, socket) {
     if (activeSocket?.connected && sessionId) {
       activeSocket.timeout(30000).emit('stop-recording', { sessionId }, (error, response) => {
         if (error || response?.ok === false) {
-          showError(response?.error?.message || error?.message || 'Failed to stop recording');
+          showError(
+            response?.error?.message || error?.message || 'Failed to stop recording',
+            getErrorDetails(response?.error || error)
+          );
           setRecordingStatus('error');
         }
       });

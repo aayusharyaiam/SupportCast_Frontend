@@ -11,16 +11,11 @@ export function useMediasoup() {
   const [rtpCapabilities, setRtpCapabilities] = useState(null);
 
   const initializeDevice = useCallback(async (serverCaps) => {
-    try {
-      const device = new mediasoupClient.Device();
-      await device.load({ routerRtpCapabilities: serverCaps });
-      deviceRef.current = device;
-      setRtpCapabilities(device.rtpCapabilities);
-      return device;
-    } catch (error) {
-      console.error('Failed to initialize mediasoup device:', error);
-      throw error;
-    }
+    const device = new mediasoupClient.Device();
+    await device.load({ routerRtpCapabilities: serverCaps });
+    deviceRef.current = device;
+    setRtpCapabilities(device.rtpCapabilities);
+    return device;
   }, []);
 
   const createSendTransport = useCallback(async (serverTransport, sessionId, emit) => {
@@ -103,32 +98,27 @@ export function useMediasoup() {
     const device = deviceRef.current;
     if (!device) throw new Error('Device not initialized');
 
-    try {
-      const consumerOptions = await emit('consume', {
-        sessionId,
-        producerId,
-        rtpCapabilities: device.rtpCapabilities,
-      });
+    const consumerOptions = await emit('consume', {
+      sessionId,
+      producerId,
+      rtpCapabilities: device.rtpCapabilities,
+    });
 
-      if (!device.canConsume({ producerId, rtpCapabilities: device.rtpCapabilities })) {
-        throw new Error('Cannot consume this producer');
-      }
-
-      const consumer = await transport.consume({
-        producerId,
-        id: consumerOptions.id,
-        kind: consumerOptions.kind,
-        rtpParameters: consumerOptions.rtpParameters,
-      });
-
-      await emit('resume-consumer', { sessionId, consumerId: consumer.id });
-
-      consumersRef.current.set(consumer.id, consumer);
-      return consumer;
-    } catch (error) {
-      console.error('Failed to consume:', error);
-      throw error;
+    if (!device.canConsume({ producerId, rtpCapabilities: device.rtpCapabilities })) {
+      throw new Error('Cannot consume this producer');
     }
+
+    const consumer = await transport.consume({
+      producerId,
+      id: consumerOptions.id,
+      kind: consumerOptions.kind,
+      rtpParameters: consumerOptions.rtpParameters,
+    });
+
+    await emit('resume-consumer', { sessionId, consumerId: consumer.id });
+
+    consumersRef.current.set(consumer.id, consumer);
+    return consumer;
   }, []);
 
   const closeProducer = useCallback((producerId) => {

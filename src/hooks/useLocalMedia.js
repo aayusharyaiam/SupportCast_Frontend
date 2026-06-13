@@ -30,7 +30,29 @@ export function useLocalMedia() {
       setIsRequestingPermission(false);
       return stream;
     } catch (error) {
-      console.error('Failed to get user media:', error);
+      setMediaError(error);
+      setIsMediaReady(false);
+      setIsRequestingPermission(false);
+      return null;
+    }
+  }, []);
+
+  const getUserMediaAudioOnly = useCallback(async () => {
+    setIsRequestingPermission(true);
+    setMediaError(null);
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: { echoCancellation: true, noiseSuppression: true },
+        video: false,
+      });
+
+      localStreamRef.current = stream;
+      setIsMediaReady(true);
+      setIsRequestingPermission(false);
+      setIsVideoEnabled(false);
+      return stream;
+    } catch (error) {
       setMediaError(error);
       setIsMediaReady(false);
       setIsRequestingPermission(false);
@@ -122,6 +144,7 @@ export function useLocalMedia() {
     mediaError,
     isRequestingPermission,
     getUserMedia,
+    getUserMediaAudioOnly,
     toggleAudio,
     toggleVideo,
     muteAudio,

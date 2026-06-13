@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import { CheckCircle2, MessageSquare, Clock, Download } from 'lucide-react';
 import { useSessionStore } from '../store/sessionStore';
 import Button from '../components/ui/Button';
@@ -6,7 +7,9 @@ import Badge from '../components/ui/Badge';
 
 export default function SessionEnded() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { session, recordingUrl } = useSessionStore();
+  const leftCall = searchParams.get('left') === '1';
 
   const durMin = session?.duration_seconds ? Math.floor(session.duration_seconds / 60) : 0;
   const durSec = session?.duration_seconds ? session.duration_seconds % 60 : 0;
@@ -23,9 +26,13 @@ export default function SessionEnded() {
             <CheckCircle2 className="w-8 h-8 text-emerald-400" />
           </div>
 
-          <h1 className="text-2xl font-bold text-white mb-2">Session Ended</h1>
+          <h1 className="text-2xl font-bold text-white mb-2">
+            {leftCall ? 'You Left the Call' : 'Session Ended'}
+          </h1>
           <p className="text-gray-500 mb-8">
-            Thank you for using SupportCast. Your session has ended.
+            {leftCall
+              ? 'You have left the call. The support session can continue for the agent.'
+              : 'Thank you for using SupportCast. Your session has ended.'}
           </p>
 
           {session?.duration_seconds && (

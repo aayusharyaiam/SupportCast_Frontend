@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Shield, Video, Clock, ChevronLeft, ChevronRight, Search, X, Eye, MessageSquare, BarChart2 } from 'lucide-react';
+import { Shield, Video, Clock, ChevronLeft, ChevronRight, Search, X, Eye, MessageSquare, BarChart2, UserPlus, Trash2, Users } from 'lucide-react';
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, Legend
@@ -12,6 +12,7 @@ import Button from '../components/ui/Button';
 import Spinner from '../components/ui/Spinner';
 import EmptyState from '../components/ui/EmptyState';
 import ConfirmDialog from '../components/ui/ConfirmDialog';
+import Modal from '../components/ui/Modal';
 
 const CHART_COLORS = { active: '#10B981', ended: '#3B82F6', waiting: '#F59E0B' };
 
@@ -30,7 +31,7 @@ const toStartOfDay = (date) => `${date}T00:00:00.000Z`;
 const toEndOfDay = (date) => `${date}T23:59:59.999Z`;
 
 export default function AdminDashboard() {
-  const { showError } = useUiStore();
+  const { showError, showSuccess } = useUiStore();
   const navigate = useNavigate();
 
   const [liveSessions, setLiveSessions] = useState([]);
@@ -43,6 +44,13 @@ export default function AdminDashboard() {
   const [searchQuery, setSearchQuery] = useState('');
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
+  const [agents, setAgents] = useState([]);
+  const [showCreateAgent, setShowCreateAgent] = useState(false);
+  const [deleteAgentTarget, setDeleteAgentTarget] = useState(null);
+  const [isCreatingAgent, setIsCreatingAgent] = useState(false);
+  const [isDeletingAgent, setIsDeletingAgent] = useState(false);
+  const [agentForm, setAgentForm] = useState({ email: '', password: '', displayName: '', role: 'agent' });
+  const [agentFormError, setAgentFormError] = useState('');
 
   const loadLive = useCallback(async () => {
     try {
@@ -73,6 +81,37 @@ export default function AdminDashboard() {
     catch { showError('Failed to end session'); }
     finally { setIsEnding(false); }
   };
+
+  const loadAgents = useCallback(async () => {
+    try { const data = await adminAPI.getAgents(); setAgents(Array.isArray(data) ? data : []); }
+    catch { /* silent */ }
+  }, []);
+
+  const handleCreateAgent = async (e) => {
+    e.preventDefault();
+    if (!agentForm.email.trim() || !agentForm.password || !agentForm.displayName.trim()) return;
+    setAgentFormError('');
+    setIsCreatingAgent(true);
+    try {
+      await adminAPI.createAgent(agentForm);
+      setAgentForm({ email: '', password: '', displayName: '', role: 'agent' });
+      setShowCreateAgent(false);
+      loadAgents();
+      showSuccess('Agent created successfully');
+    } catch (err) {
+      setAgentFormError(err.message || 'Failed to create agent');
+    } finally { setIsCreatingAgent(false); }
+  };
+
+  const handleDeleteAgent = async () => {
+    if (!deleteAgentTarget) return;
+    setIsDeletingAgent(true);
+    try { await adminAPI.deleteAgent(deleteAgentTarget.id); setDeleteAgentTarget(null); loadAgents(); }
+    catch { showError('Failed to delete agent'); }
+    finally { setIsDeletingAgent(false); }
+  };
+
+  useEffect(() => { loadAgents(); }, [loadAgents]);
 
   const filteredHistory = searchQuery.trim()
     ? historySessions.filter(s => s.id?.toLowerCase().includes(searchQuery.toLowerCase()) || s.agents?.display_name?.toLowerCase().includes(searchQuery.toLowerCase()))
@@ -118,7 +157,13 @@ export default function AdminDashboard() {
           </h1>
           <p className="text-sm text-gray-500 mt-0.5">Monitor all support sessions</p>
         </div>
-        <Badge variant="live" size="lg" pulse>{liveSessions.length} Live</Badge>
+        <div className="flex items-center gap-3">
+          <Badge variant="live" size="lg" pulse>{liveSessions.length} Live</Badge>
+          <Button size="sm" onClick={() => setShowCreateAgent(true)}>
+            <UserPlus className="w-4 h-4" />
+            Create Agent
+          </Button>
+        </div>
       </div>
 
       {/* Stat cards */}
@@ -286,10 +331,147 @@ export default function AdminDashboard() {
         )}
       </section>
 
+      {/* Agent Management */}
+      <section>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider">Agent Management</h2>
+          <Button variant="secondary" size="sm" onClick={() => setShowCreateAgent(true)}>
+            <UserPlus className="w-3.5 h-3.5" />
+            Add Agent
+          </Button>
+        </div>
+
+        {agents.length === 0 ? (
+          <EmptyState icon={Users} title="No agents found" description="Create an agent to get started" />
+        ) : (
+          <div className="glass-card overflow-hidden">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-white/6">
+                  {['Name', 'Email', 'Role', 'Created', ''].map(h => (
+                    <th key={h} className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {agents.map((agent) => (
+                  <tr key={agent.id} className="border-b border-white/4 hover:bg-white/[0.02] transition-colors">
+                    <td className="px-4 py-3 text-sm text-gray-200">{agent.display_name || '—'}</td>
+                    <td className="px-4 py-3 text-sm text-gray-400">{agent.email}</td>
+                    <td className="px-4 py-3">
+                      <Badge variant={agent.role === 'admin' ? 'warning' : 'idle'} size="sm">
+                        {agent.role}
+                      </Badge>
+                    </td>
+                    <td className="px-4 py-3 text-sm text-gray-500">
+                      {agent.created_at ? new Date(agent.created_at).toLocaleDateString() : '—'}
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      <Button
+                        variant="danger"
+                        size="sm"
+                        onClick={() => setDeleteAgentTarget(agent)}
+                        aria-label={`Delete ${agent.email}`}
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </Button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
+
       <ConfirmDialog isOpen={!!forceEndTarget} onClose={() => setForceEndTarget(null)} onConfirm={handleForceEnd}
         title="End session?" variant="danger" loading={isEnding}
         message={`End session #${forceEndTarget?.id?.slice(0, 8)}? Both participants will be disconnected.`}
         confirmLabel="End Session" />
+
+      <Modal
+        isOpen={showCreateAgent}
+        onClose={() => { setShowCreateAgent(false); setAgentFormError(''); setAgentForm({ email: '', password: '', displayName: '', role: 'agent' }); }}
+        title="Create New Agent"
+        size="sm"
+      >
+        <form onSubmit={handleCreateAgent} className="space-y-4">
+          {agentFormError && (
+            <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
+              {agentFormError}
+            </div>
+          )}
+
+          <div>
+            <label className="block text-xs font-medium text-gray-400 mb-1.5">Display Name</label>
+            <input
+              type="text"
+              value={agentForm.displayName}
+              onChange={e => setAgentForm(f => ({ ...f, displayName: e.target.value }))}
+              className="glass-input w-full text-sm"
+              placeholder="Jane Smith"
+              required
+              minLength={2}
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-medium text-gray-400 mb-1.5">Email</label>
+            <input
+              type="email"
+              value={agentForm.email}
+              onChange={e => setAgentForm(f => ({ ...f, email: e.target.value }))}
+              className="glass-input w-full text-sm"
+              placeholder="agent@company.com"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-medium text-gray-400 mb-1.5">Password</label>
+            <input
+              type="password"
+              value={agentForm.password}
+              onChange={e => setAgentForm(f => ({ ...f, password: e.target.value }))}
+              className="glass-input w-full text-sm"
+              placeholder="Min. 8 characters"
+              required
+              minLength={8}
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-medium text-gray-400 mb-1.5">Role</label>
+            <select
+              value={agentForm.role}
+              onChange={e => setAgentForm(f => ({ ...f, role: e.target.value }))}
+              className="glass-input w-full text-sm appearance-none"
+            >
+              <option value="agent">Agent</option>
+              <option value="admin">Admin</option>
+            </select>
+          </div>
+
+          <div className="flex gap-2 pt-2">
+            <Button
+              type="button"
+              variant="secondary"
+              className="flex-1"
+              onClick={() => { setShowCreateAgent(false); setAgentFormError(''); }}
+            >
+              Cancel
+            </Button>
+            <Button type="submit" className="flex-1" disabled={isCreatingAgent}>
+              {isCreatingAgent ? <Spinner size="sm" /> : 'Create Agent'}
+            </Button>
+          </div>
+        </form>
+      </Modal>
+
+      <ConfirmDialog isOpen={!!deleteAgentTarget} onClose={() => setDeleteAgentTarget(null)} onConfirm={handleDeleteAgent}
+        title="Delete agent?" variant="danger" loading={isDeletingAgent}
+        message={`Remove ${deleteAgentTarget?.email}? They will lose access to SupportCast.`}
+        confirmLabel="Delete Agent" />
     </div>
   );
 }

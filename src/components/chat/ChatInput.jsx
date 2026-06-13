@@ -28,7 +28,11 @@ export default function ChatInput({ onSend, onFileSelect }) {
             <input
               type="file"
               className="hidden"
-              onChange={onFileSelect}
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) onFileSelect(file);
+                e.target.value = '';
+              }}
               accept="image/*,.pdf,.doc,.docx,.txt"
             />
           </label>
