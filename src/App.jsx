@@ -19,10 +19,6 @@ function ProtectedRoute({ children, requiredRole }) {
     return <Navigate to="/login" replace />;
   }
 
-  if (role === 'customer') {
-    return children;
-  }
-
   if (requiredRole && role !== requiredRole) {
     return <Navigate to="/dashboard" replace />;
   }

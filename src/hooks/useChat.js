@@ -61,8 +61,70 @@ export function useChat(sessionId) {
     [sessionId, socket, addMessage, showError]
   );
 
+  const shareFile = useCallback(
+    async (file) => {
+      const tempId = `temp-${++tempIdCounter.current}`;
+      const role = localStorage.getItem('role');
+      const name = localStorage.getItem('displayName') || 'You';
+
+      addMessage({
+        id: tempId,
+        session_id: sessionId,
+        sender_role: role,
+        sender_name: name,
+        type: 'file',
+        file_name: file.name,
+        file_size: file.size,
+        file_type: file.type,
+        file_url: null,
+        created_at: new Date().toISOString(),
+        pending: true,
+      });
+
+      try {
+        const signed = await sessionAPI.getFileSignedUrl(sessionId, {
+          fileName: file.name,
+          fileType: file.type,
+          fileSize: file.size,
+        });
+
+        const uploadRes = await fetch(signed.uploadUrl, {
+          method: 'PUT',
+          body: file,
+          headers: { 'Content-Type': file.type },
+        });
+
+        if (!uploadRes.ok) {
+          throw new Error('Upload failed');
+        }
+
+        if (socket?.connected) {
+          socket.emit(
+            'share-file',
+            {
+              sessionId,
+              fileName: file.name,
+              fileUrl: signed.publicUrl,
+              fileSize: file.size,
+              fileType: file.type,
+            },
+            (error, response) => {
+              if (error || response?.ok === false) {
+                showError('Failed to share file');
+              }
+            }
+          );
+        }
+      } catch (err) {
+        showError('Failed to upload file');
+      }
+    },
+    [sessionId, socket, addMessage, showError]
+  );
+
   return {
     messages: messages.filter((m) => m.session_id === sessionId),
     sendMessage,
+    shareFile,
   };
 }

@@ -5,7 +5,7 @@ import ChatMessage from './ChatMessage';
 import ChatInput from './ChatInput';
 
 export default function ChatPanel({ sessionId, onClose }) {
-  const { messages, sendMessage } = useChat(sessionId);
+  const { messages, sendMessage, shareFile } = useChat(sessionId);
   const messagesEndRef = useRef(null);
 
   useEffect(() => {
@@ -41,7 +41,7 @@ export default function ChatPanel({ sessionId, onClose }) {
         <div ref={messagesEndRef} />
       </div>
 
-      <ChatInput onSend={handleSendMessage} />
+      <ChatInput onSend={handleSendMessage} onFileSelect={shareFile} />
     </div>
   );
 }

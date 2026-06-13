@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Shield, Video, Clock, ChevronLeft, ChevronRight, Search, X } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Shield, Video, Clock, ChevronLeft, ChevronRight, Search, X, Eye } from 'lucide-react';
 import { adminAPI } from '../services/api';
 import { useUiStore } from '../store/uiStore';
 import Badge from '../components/ui/Badge';
@@ -10,6 +11,7 @@ import ConfirmDialog from '../components/ui/ConfirmDialog';
 
 export default function AdminDashboard() {
   const { showError } = useUiStore();
+  const navigate = useNavigate();
 
   const [liveSessions, setLiveSessions] = useState([]);
   const [historySessions, setHistorySessions] = useState([]);
@@ -19,6 +21,8 @@ export default function AdminDashboard() {
   const [forceEndTarget, setForceEndTarget] = useState(null);
   const [isEnding, setIsEnding] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
 
   const loadLive = useCallback(async () => {
     try {
@@ -32,7 +36,13 @@ export default function AdminDashboard() {
   const loadHistory = useCallback(async (page = 1) => {
     setIsLoading(true);
     try {
-      const result = await adminAPI.getSessionHistory({ page, limit: 20 });
+      const params = {
+        page,
+        limit: 20,
+        ...(dateFrom ? { date_from: toStartOfDay(dateFrom) } : {}),
+        ...(dateTo ? { date_to: toEndOfDay(dateTo) } : {}),
+      };
+      const result = await adminAPI.getSessionHistory(params);
       const sessions = Array.isArray(result) ? result : (result?.data ?? []);
       const meta = result?.pagination ?? null;
       setHistorySessions(sessions);
@@ -43,7 +53,7 @@ export default function AdminDashboard() {
     } finally {
       setIsLoading(false);
     }
-  }, [showError]);
+  }, [dateFrom, dateTo, showError]);
 
   useEffect(() => {
     loadLive();
@@ -140,23 +150,40 @@ export default function AdminDashboard() {
       <section>
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold text-text-primary">Session History</h2>
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" />
+          <div className="flex items-center gap-2">
             <input
-              type="text"
-              placeholder="Search by session ID or agent..."
-              value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
-              className="pl-9 pr-8 py-2 bg-bg-surface border border-bg-elevated rounded-lg text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-primary-500 w-64"
+              type="date"
+              value={dateFrom}
+              onChange={e => setDateFrom(e.target.value)}
+              className="px-3 py-2 bg-bg-surface border border-bg-elevated rounded-lg text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-primary-500"
+              aria-label="Filter sessions from date"
             />
-            {searchQuery && (
-              <button
-                onClick={() => setSearchQuery('')}
-                className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded text-text-muted hover:text-text-primary"
-              >
-                <X className="w-3 h-3" />
-              </button>
-            )}
+            <input
+              type="date"
+              value={dateTo}
+              onChange={e => setDateTo(e.target.value)}
+              className="px-3 py-2 bg-bg-surface border border-bg-elevated rounded-lg text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-primary-500"
+              aria-label="Filter sessions to date"
+            />
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" />
+              <input
+                type="text"
+                placeholder="Search by session ID or agent..."
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                className="pl-9 pr-8 py-2 bg-bg-surface border border-bg-elevated rounded-lg text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-primary-500 w-64"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery('')}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded text-text-muted hover:text-text-primary"
+                  aria-label="Clear search"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              )}
+            </div>
           </div>
         </div>
 
@@ -181,6 +208,7 @@ export default function AdminDashboard() {
                     <th className="text-left p-4 text-text-secondary font-medium">Started</th>
                     <th className="text-left p-4 text-text-secondary font-medium">Duration</th>
                     <th className="text-left p-4 text-text-secondary font-medium">Status</th>
+                    <th className="text-right p-4 text-text-secondary font-medium">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -200,6 +228,16 @@ export default function AdminDashboard() {
                         <Badge variant={session.recordings?.some((recording) => recording.status === 'ready') ? 'live' : 'idle'}>
                           {session.recordings?.some((recording) => recording.status === 'ready') ? 'Recorded' : 'No Recording'}
                         </Badge>
+                      </td>
+                      <td className="p-4 text-right">
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          onClick={() => navigate(`/admin/sessions/${session.id}`)}
+                          aria-label={`View session ${session.id.slice(0, 8)}`}
+                        >
+                          <Eye className="w-4 h-4" />
+                        </Button>
                       </td>
                     </tr>
                   ))}
@@ -276,3 +314,7 @@ const formatDuration = (session) => {
   const seconds = Math.max(0, Math.floor((Date.now() - new Date(session.started_at).getTime()) / 1000));
   return `${Math.floor(seconds / 60)}m`;
 };
+
+const toStartOfDay = (date) => `${date}T00:00:00.000Z`;
+
+const toEndOfDay = (date) => `${date}T23:59:59.999Z`;

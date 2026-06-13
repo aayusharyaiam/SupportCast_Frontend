@@ -55,6 +55,8 @@ export const sessionAPI = {
     api.get(`/sessions/${id}/chat`),
   getRecording: (id) =>
     api.get(`/sessions/${id}/recording`),
+  getFileSignedUrl: (id, { fileName, fileType, fileSize }) =>
+    api.post(`/sessions/${id}/files/signed-url`, { fileName, fileType, fileSize }),
 };
 
 export const adminAPI = {
