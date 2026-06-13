@@ -70,12 +70,12 @@ export default function Modal({
         `}
       >
         <div className="flex items-center justify-between p-4 border-b border-white/[0.06]">
-          <h2 id="modal-title" className="text-lg font-semibold text-text-primary">
+          <h2 id="modal-title" className="text-lg font-semibold text-gray-100">
             {title}
           </h2>
           <button
             onClick={onClose}
-            className="p-1 rounded-lg text-text-secondary hover:text-text-primary hover:bg-bg-elevated transition-colors"
+            className="p-1 rounded-lg text-gray-400 hover:text-gray-100 hover:bg-white/[0.06] transition-colors"
             aria-label="Close modal"
           >
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
