@@ -244,7 +244,7 @@ export default function SessionView() {
   const handleEndCall = useCallback(() => {
     stopMedia();
     if (isAgent) {
-      emit('end-session', { sessionId });
+      emit('end-session', { sessionId }).catch(() => {});
       navigate(`/session/${sessionId}/ended`);
       return;
     }
