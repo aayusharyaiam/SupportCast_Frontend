@@ -1,0 +1,67 @@
+import { Mic, MicOff, Video, VideoOff, PhoneOff, MessageSquare } from 'lucide-react';
+import Button from '../ui/Button';
+import ConnectionQuality from './ConnectionQuality';
+
+export default function VideoControls({
+  isAudioEnabled,
+  isVideoEnabled,
+  onToggleAudio,
+  onToggleVideo,
+  onOpenChat,
+  onEndCall,
+  connectionQuality,
+}) {
+  return (
+    <div className="h-20 px-4 flex items-center justify-center gap-4 bg-bg-surface border-t border-bg-elevated">
+      <Button
+        variant={isAudioEnabled ? 'secondary' : 'danger'}
+        size="icon"
+        onClick={onToggleAudio}
+        aria-label={isAudioEnabled ? 'Mute microphone' : 'Unmute microphone'}
+      >
+        {isAudioEnabled ? (
+          <Mic className="w-5 h-5" />
+        ) : (
+          <MicOff className="w-5 h-5" />
+        )}
+      </Button>
+
+      <Button
+        variant={isVideoEnabled ? 'secondary' : 'danger'}
+        size="icon"
+        onClick={onToggleVideo}
+        aria-label={isVideoEnabled ? 'Turn off camera' : 'Turn on camera'}
+      >
+        {isVideoEnabled ? (
+          <Video className="w-5 h-5" />
+        ) : (
+          <VideoOff className="w-5 h-5" />
+        )}
+      </Button>
+
+      {connectionQuality && (
+        <ConnectionQuality quality={connectionQuality} />
+      )}
+
+      <Button
+        variant="secondary"
+        size="icon"
+        onClick={onOpenChat}
+        aria-label="Open chat"
+      >
+        <MessageSquare className="w-5 h-5" />
+      </Button>
+
+      <div className="w-px h-8 bg-bg-elevated" />
+
+      <Button
+        variant="danger"
+        size="icon"
+        onClick={onEndCall}
+        aria-label="End call"
+      >
+        <PhoneOff className="w-5 h-5" />
+      </Button>
+    </div>
+  );
+}
