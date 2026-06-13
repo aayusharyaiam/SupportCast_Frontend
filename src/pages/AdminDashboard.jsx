@@ -227,7 +227,7 @@ export default function AdminDashboard() {
         {liveSessions.length === 0 ? (
           <EmptyState icon={Video} title="No active sessions" description="All support sessions have ended" />
         ) : (
-          <div className="glass-table overflow-hidden bg-bg-surface/50 backdrop-blur-md">
+          <div className="glass-table overflow-x-auto bg-bg-surface/50 backdrop-blur-md">
             <table className="w-full">
               <thead>
                 <tr className="border-b border-white/6">
@@ -283,7 +283,7 @@ export default function AdminDashboard() {
           <EmptyState icon={Clock} title="No sessions found" description={searchQuery ? 'Try a different search term' : 'Past sessions will appear here'} />
         ) : (
           <>
-            <div className="glass-table overflow-hidden bg-bg-surface/50 backdrop-blur-md mb-4">
+            <div className="glass-table overflow-x-auto bg-bg-surface/50 backdrop-blur-md mb-4">
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-white/6">
@@ -348,7 +348,7 @@ export default function AdminDashboard() {
         {agents.length === 0 ? (
           <EmptyState icon={Users} title="No agents found" description="Create an agent to get started" />
         ) : (
-          <div className="glass-table overflow-hidden">
+          <div className="glass-table overflow-x-auto">
             <table className="w-full">
               <thead>
                 <tr className="border-b border-white/6">

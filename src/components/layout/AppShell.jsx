@@ -19,7 +19,7 @@ export default function AppShell({ children }) {
         className={`
           flex-1 flex flex-col relative z-10 overflow-hidden
           transition-all duration-300 ease-in-out
-          ${isSidebarOpen ? 'ml-60' : 'ml-16'}
+          ${isSidebarOpen ? 'ml-16 lg:ml-60' : 'ml-16'}
         `}
       >
         <header className="h-16 bg-[#0D1220]/40 backdrop-blur-md border-b border-white/[0.06] flex items-center px-4">

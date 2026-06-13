@@ -69,7 +69,7 @@ export default function Dashboard() {
       <JudgeGuide />
 
       {/* Stat cards */}
-      <div className="grid grid-cols-3 gap-4 mb-8 perspective-1000">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8 perspective-1000">
         {statCards.map(({ label, value, icon: Icon }, idx) => (
           <div
             key={label}
