@@ -300,8 +300,18 @@ export default function AdminDashboard() {
                       <td className="px-4 py-3 text-sm text-gray-500">{s.started_at ? new Date(s.started_at).toLocaleString() : '-'}</td>
                       <td className="px-4 py-3 text-sm text-gray-500">{s.duration_seconds ? `${Math.floor(s.duration_seconds / 60)}m ${s.duration_seconds % 60}s` : '-'}</td>
                       <td className="px-4 py-3">
-                        <Badge variant={s.recordings?.some(r => r.status === 'ready') ? 'live' : 'idle'} size="sm">
-                          {s.recordings?.some(r => r.status === 'ready') ? 'Recorded' : 'None'}
+                        <Badge variant={
+                          s.recordings?.some(r => r.status === 'ready') ? 'live' :
+                          s.recordings?.some(r => r.status === 'recording' || r.status === 'processing') ? 'warning' :
+                          s.recordings?.length > 0 ? 'error' : 'idle'
+                        } size="sm">
+                          {s.recordings?.some(r => r.status === 'ready')
+                            ? `${s.recordings.filter(r => r.status === 'ready').length} Ready`
+                            : s.recordings?.some(r => r.status === 'recording' || r.status === 'processing')
+                            ? 'Processing'
+                            : s.recordings?.length > 0
+                            ? 'Failed'
+                            : 'None'}
                         </Badge>
                       </td>
                       <td className="px-4 py-3 text-right">

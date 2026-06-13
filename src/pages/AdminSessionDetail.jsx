@@ -121,14 +121,31 @@ export default function AdminSessionDetail() {
 
       <div className="bg-bg-surface rounded-xl p-6 mt-6">
         <h2 className="font-semibold text-text-primary mb-4">Recordings</h2>
-        {session.recordings?.some(r => r.status === 'ready') ? (
+        {session.recordings?.length > 0 ? (
           <div className="space-y-3">
-            {session.recordings.filter(r => r.status === 'ready').map(r => (
+            {session.recordings.map(r => (
               <div key={r.id} className="flex items-center justify-between p-3 rounded-lg bg-bg-elevated">
-                <span className="text-text-primary text-sm">Recording from {new Date(r.created_at).toLocaleString()}</span>
-                <Button variant="secondary" size="sm" onClick={() => window.open(r.file_url, '_blank')}>
-                  <Download className="w-4 h-4 mr-2" /> Download
-                </Button>
+                <div className="flex items-center gap-3">
+                  <Badge
+                    variant={r.status === 'ready' ? 'live' : r.status === 'error' ? 'error' : 'idle'}
+                    size="sm"
+                  >
+                    {r.status}
+                  </Badge>
+                  <span className="text-text-primary text-sm">
+                    {new Date(r.created_at).toLocaleString()}
+                    {r.duration_seconds ? ` · ${Math.floor(r.duration_seconds / 60)}m ${r.duration_seconds % 60}s` : ''}
+                  </span>
+                </div>
+                {r.status === 'ready' && r.file_url ? (
+                  <Button variant="secondary" size="sm" onClick={() => window.open(r.file_url, '_blank')}>
+                    <Download className="w-4 h-4 mr-2" /> Download
+                  </Button>
+                ) : r.status === 'error' ? (
+                  <span className="text-xs text-status-error">{r.error_message || 'Recording failed'}</span>
+                ) : (
+                  <span className="text-xs text-text-muted">{r.status === 'processing' ? 'Processing...' : 'In progress'}</span>
+                )}
               </div>
             ))}
           </div>
