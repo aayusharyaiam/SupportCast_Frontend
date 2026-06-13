@@ -53,7 +53,6 @@ export default function SessionView() {
   const { quality: connectionQuality } = useConnectionQuality(peerConnectionRef.current);
   const {
     isRecording,
-    recordingStatus,
     startRecording,
     stopRecording,
   } = useRecording(sessionId, socket?.socket || null);

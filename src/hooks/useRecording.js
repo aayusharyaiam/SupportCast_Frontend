@@ -1,8 +1,10 @@
 import { useCallback, useEffect } from 'react';
+import { getSocket } from '../services/socket';
 import { useSessionStore } from '../store/sessionStore';
 import { useUiStore } from '../store/uiStore';
 
 export function useRecording(sessionId, socket) {
+  const activeSocket = socket || getSocket();
   const recordingStatus = useSessionStore((state) => state.recordingStatus);
   const recordingUrl = useSessionStore((state) => state.recordingUrl);
   const setRecordingStatus = useSessionStore((state) => state.setRecordingStatus);
@@ -12,7 +14,7 @@ export function useRecording(sessionId, socket) {
   const showInfo = useUiStore((state) => state.showInfo);
 
   useEffect(() => {
-    if (!socket || !sessionId) return;
+    if (!activeSocket || !sessionId) return;
 
     const handleRecordingStatus = (data) => {
       if (data.sessionId === sessionId) {
@@ -31,32 +33,42 @@ export function useRecording(sessionId, socket) {
     };
 
     const handleError = (error) => {
-      if (error.code === 'RECORDING_ERROR') {
+      if (error.code?.startsWith('RECORDING')) {
         showError(error.message);
         setRecordingStatus('error');
       }
     };
 
-    socket.on('recording-status', handleRecordingStatus);
-    socket.on('error', handleError);
+    activeSocket.on('recording-status', handleRecordingStatus);
+    activeSocket.on('error', handleError);
 
     return () => {
-      socket.off('recording-status', handleRecordingStatus);
-      socket.off('error', handleError);
+      activeSocket.off('recording-status', handleRecordingStatus);
+      activeSocket.off('error', handleError);
     };
-  }, [socket, sessionId, setRecordingStatus, setRecordingUrl, showError, showSuccess, showInfo]);
+  }, [activeSocket, sessionId, setRecordingStatus, setRecordingUrl, showError, showSuccess, showInfo]);
 
   const startRecording = useCallback(() => {
-    if (socket?.connected && sessionId) {
-      socket.emit('start-recording', { sessionId });
+    if (activeSocket?.connected && sessionId) {
+      activeSocket.timeout(10000).emit('start-recording', { sessionId }, (error, response) => {
+        if (error || response?.ok === false) {
+          showError(response?.error?.message || error?.message || 'Failed to start recording');
+          setRecordingStatus('error');
+        }
+      });
     }
-  }, [socket, sessionId]);
+  }, [activeSocket, sessionId, setRecordingStatus, showError]);
 
   const stopRecording = useCallback(() => {
-    if (socket?.connected && sessionId) {
-      socket.emit('stop-recording', { sessionId });
+    if (activeSocket?.connected && sessionId) {
+      activeSocket.timeout(30000).emit('stop-recording', { sessionId }, (error, response) => {
+        if (error || response?.ok === false) {
+          showError(response?.error?.message || error?.message || 'Failed to stop recording');
+          setRecordingStatus('error');
+        }
+      });
     }
-  }, [socket, sessionId]);
+  }, [activeSocket, sessionId, setRecordingStatus, showError]);
 
   const isRecording = recordingStatus === 'recording';
   const isProcessing = recordingStatus === 'processing';

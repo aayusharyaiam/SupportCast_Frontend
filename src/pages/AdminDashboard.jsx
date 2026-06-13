@@ -1,59 +1,78 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Shield, Video, Clock } from 'lucide-react';
+import { Shield, Video, Clock, ChevronLeft, ChevronRight, Search, X } from 'lucide-react';
 import { adminAPI } from '../services/api';
 import { useUiStore } from '../store/uiStore';
 import Badge from '../components/ui/Badge';
 import Button from '../components/ui/Button';
 import Spinner from '../components/ui/Spinner';
 import EmptyState from '../components/ui/EmptyState';
+import ConfirmDialog from '../components/ui/ConfirmDialog';
 
 export default function AdminDashboard() {
   const { showError } = useUiStore();
+
   const [liveSessions, setLiveSessions] = useState([]);
   const [historySessions, setHistorySessions] = useState([]);
+  const [pagination, setPagination] = useState(null);
+  const [historyPage, setHistoryPage] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
-  const [forceEndId, setForceEndId] = useState(null);
+  const [forceEndTarget, setForceEndTarget] = useState(null);
+  const [isEnding, setIsEnding] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
-  const loadData = useCallback(async () => {
+  const loadLive = useCallback(async () => {
     try {
-      const [live, history] = await Promise.all([
-        adminAPI.getLiveSessions(),
-        adminAPI.getSessionHistory({ page: 1, limit: 20 }),
-      ]);
-      setLiveSessions(live);
-      setHistorySessions(history);
-    } catch (error) {
-      showError('Failed to load sessions');
+      const data = await adminAPI.getLiveSessions();
+      setLiveSessions(Array.isArray(data) ? data : []);
+    } catch {
+      // Silently refresh live sessions
+    }
+  }, []);
+
+  const loadHistory = useCallback(async (page = 1) => {
+    setIsLoading(true);
+    try {
+      const result = await adminAPI.getSessionHistory({ page, limit: 20 });
+      const sessions = Array.isArray(result) ? result : (result?.data ?? []);
+      const meta = result?.pagination ?? null;
+      setHistorySessions(sessions);
+      setPagination(meta);
+      setHistoryPage(page);
+    } catch {
+      showError('Failed to load session history');
     } finally {
       setIsLoading(false);
     }
   }, [showError]);
 
   useEffect(() => {
-    loadData();
-    const interval = setInterval(loadData, 5000);
+    loadLive();
+    loadHistory(1);
+    const interval = setInterval(loadLive, 5000);
     return () => clearInterval(interval);
-  }, [loadData]);
+  }, [loadLive, loadHistory]);
 
-  const handleForceEnd = async (sessionId) => {
-    setForceEndId(sessionId);
+  const handleForceEnd = async () => {
+    if (!forceEndTarget) return;
+    setIsEnding(true);
     try {
-      await adminAPI.forceEndSession(sessionId);
-      loadData();
-    } catch (error) {
+      await adminAPI.forceEndSession(forceEndTarget.id);
+      setForceEndTarget(null);
+      loadLive();
+      loadHistory(historyPage);
+    } catch {
       showError('Failed to end session');
     } finally {
-      setForceEndId(null);
+      setIsEnding(false);
     }
   };
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <Spinner size="lg" />
-      </div>
-    );
-  }
+  const filteredHistory = searchQuery.trim()
+    ? historySessions.filter(s =>
+        s.id?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        s.agents?.display_name?.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    : historySessions;
 
   return (
     <div className="max-w-7xl mx-auto">
@@ -105,8 +124,7 @@ export default function AdminDashboard() {
                       <Button
                         variant="danger"
                         size="sm"
-                        loading={forceEndId === session.id}
-                        onClick={() => handleForceEnd(session.id)}
+                        onClick={() => setForceEndTarget(session)}
                       >
                         End
                       </Button>
@@ -120,50 +138,117 @@ export default function AdminDashboard() {
       </section>
 
       <section>
-        <h2 className="text-lg font-semibold text-text-primary mb-4">Session History (Last 24h)</h2>
-        {historySessions.length === 0 ? (
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-semibold text-text-primary">Session History</h2>
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" />
+            <input
+              type="text"
+              placeholder="Search by session ID or agent..."
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              className="pl-9 pr-8 py-2 bg-bg-surface border border-bg-elevated rounded-lg text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-primary-500 w-64"
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery('')}
+                className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded text-text-muted hover:text-text-primary"
+              >
+                <X className="w-3 h-3" />
+              </button>
+            )}
+          </div>
+        </div>
+
+        {isLoading ? (
+          <div className="flex items-center justify-center py-12">
+            <Spinner size="lg" />
+          </div>
+        ) : filteredHistory.length === 0 ? (
           <EmptyState
             icon={Clock}
-            title="No session history"
-            description="Past sessions will appear here"
+            title="No sessions found"
+            description={searchQuery ? 'Try a different search term' : 'Past sessions will appear here'}
           />
         ) : (
-          <div className="bg-bg-surface rounded-xl overflow-hidden">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-bg-elevated">
-                  <th className="text-left p-4 text-text-secondary font-medium">Session</th>
-                  <th className="text-left p-4 text-text-secondary font-medium">Agent</th>
-                  <th className="text-left p-4 text-text-secondary font-medium">Started</th>
-                  <th className="text-left p-4 text-text-secondary font-medium">Duration</th>
-                  <th className="text-left p-4 text-text-secondary font-medium">Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {historySessions.map((session) => (
-                  <tr key={session.id} className="border-b border-bg-elevated last:border-0 hover:bg-bg-elevated/50">
-                    <td className="p-4">
-                      <span className="font-mono text-sm text-text-primary">#{session.id.slice(0, 8)}</span>
-                    </td>
-                    <td className="p-4 text-text-primary">{getAgentName(session)}</td>
-                    <td className="p-4 text-text-secondary">
-                      {session.started_at ? new Date(session.started_at).toLocaleTimeString() : '-'}
-                    </td>
-                    <td className="p-4 text-text-secondary">
-                      {session.duration_seconds ? `${Math.floor(session.duration_seconds / 60)}m ${session.duration_seconds % 60}s` : '-'}
-                    </td>
-                    <td className="p-4">
-                      <Badge variant={session.recordings?.some((recording) => recording.status === 'ready') ? 'live' : 'idle'}>
-                        {session.recordings?.some((recording) => recording.status === 'ready') ? 'Recorded' : 'No Recording'}
-                      </Badge>
-                    </td>
+          <>
+            <div className="bg-bg-surface rounded-xl overflow-hidden mb-4">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-bg-elevated">
+                    <th className="text-left p-4 text-text-secondary font-medium">Session</th>
+                    <th className="text-left p-4 text-text-secondary font-medium">Agent</th>
+                    <th className="text-left p-4 text-text-secondary font-medium">Started</th>
+                    <th className="text-left p-4 text-text-secondary font-medium">Duration</th>
+                    <th className="text-left p-4 text-text-secondary font-medium">Status</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {filteredHistory.map((session) => (
+                    <tr key={session.id} className="border-b border-bg-elevated last:border-0 hover:bg-bg-elevated/50">
+                      <td className="p-4">
+                        <span className="font-mono text-sm text-text-primary">#{session.id.slice(0, 8)}</span>
+                      </td>
+                      <td className="p-4 text-text-primary">{getAgentName(session)}</td>
+                      <td className="p-4 text-text-secondary">
+                        {session.started_at ? new Date(session.started_at).toLocaleString() : '-'}
+                      </td>
+                      <td className="p-4 text-text-secondary">
+                        {session.duration_seconds ? `${Math.floor(session.duration_seconds / 60)}m ${session.duration_seconds % 60}s` : '-'}
+                      </td>
+                      <td className="p-4">
+                        <Badge variant={session.recordings?.some((recording) => recording.status === 'ready') ? 'live' : 'idle'}>
+                          {session.recordings?.some((recording) => recording.status === 'ready') ? 'Recorded' : 'No Recording'}
+                        </Badge>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {pagination && pagination.totalPages > 1 && (
+              <div className="flex items-center justify-between">
+                <p className="text-sm text-text-secondary">
+                  Showing {((pagination.page - 1) * pagination.limit) + 1}–{Math.min(pagination.page * pagination.limit, pagination.total)} of {pagination.total} sessions
+                </p>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    disabled={pagination.page <= 1}
+                    onClick={() => loadHistory(pagination.page - 1)}
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                  </Button>
+                  <span className="text-sm text-text-secondary px-2">
+                    Page {pagination.page} of {pagination.totalPages}
+                  </span>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    disabled={pagination.page >= pagination.totalPages}
+                    onClick={() => loadHistory(pagination.page + 1)}
+                  >
+                    <ChevronRight className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
+            )}
+          </>
         )}
       </section>
+
+      <ConfirmDialog
+        isOpen={!!forceEndTarget}
+        onClose={() => setForceEndTarget(null)}
+        onConfirm={handleForceEnd}
+        title="End session?"
+        message={`Are you sure you want to force-end session #${forceEndTarget?.id?.slice(0, 8)}? Both participants will be disconnected.`}
+        confirmLabel="End Session"
+        variant="danger"
+        loading={isEnding}
+      />
     </div>
   );
 }

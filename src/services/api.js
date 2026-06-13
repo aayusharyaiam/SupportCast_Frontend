@@ -17,7 +17,13 @@ api.interceptors.request.use((config) => {
 });
 
 api.interceptors.response.use(
-  (response) => response.data?.data ?? response.data,
+  (response) => {
+    const payload = response.data;
+    if (payload && typeof payload === 'object' && 'pagination' in payload) {
+      return { data: payload.data, pagination: payload.pagination };
+    }
+    return payload.data ?? payload;
+  },
   (error) => {
     const apiError = error.response?.data?.error;
     const normalized = new Error(apiError?.message || error.message || 'An error occurred');
