@@ -1,7 +1,9 @@
+import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useSearchParams } from 'react-router-dom';
 import { CheckCircle2, MessageSquare, Clock, Download, RotateCcw, Home } from 'lucide-react';
 import { useSessionStore } from '../store/sessionStore';
+import { sessionAPI } from '../services/api';
 import Button from '../components/ui/Button';
 import Badge from '../components/ui/Badge';
 
@@ -9,8 +11,37 @@ export default function SessionEnded() {
   const navigate = useNavigate();
   const { id: sessionId } = useParams();
   const [searchParams] = useSearchParams();
-  const { session, recordingUrl } = useSessionStore();
+  const storeSession = useSessionStore((state) => state.session);
+  const storeRecordingUrl = useSessionStore((state) => state.recordingUrl);
   const leftCall = searchParams.get('left') === '1';
+
+  const [localSession, setLocalSession] = useState(storeSession);
+  const [localRecordingUrl, setLocalRecordingUrl] = useState(storeRecordingUrl);
+
+  useEffect(() => {
+    if (storeRecordingUrl) {
+      setLocalRecordingUrl(storeRecordingUrl);
+      return;
+    }
+    
+    if (storeSession?.recordings) {
+      const readyRecording = storeSession.recordings.find(r => r.status === 'ready');
+      if (readyRecording) {
+        setLocalRecordingUrl(readyRecording.file_url);
+      }
+    } else if (sessionId) {
+      sessionAPI.get(sessionId).then(data => {
+        setLocalSession(data);
+        const readyRecording = data.recordings?.find(r => r.status === 'ready');
+        if (readyRecording) {
+          setLocalRecordingUrl(readyRecording.file_url);
+        }
+      }).catch(console.error);
+    }
+  }, [storeSession, storeRecordingUrl, sessionId]);
+
+  const session = localSession || storeSession;
+  const recordingUrl = localRecordingUrl || storeRecordingUrl;
 
   const role = localStorage.getItem('role');
   const isCustomer = role === 'customer';

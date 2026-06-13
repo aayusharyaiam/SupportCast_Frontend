@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Clock, User, AlertCircle } from 'lucide-react';
+import { ArrowLeft, Clock, User, AlertCircle, Download } from 'lucide-react';
 import { adminAPI } from '../services/api';
 import { useUiStore } from '../store/uiStore';
 import Button from '../components/ui/Button';
@@ -117,6 +117,24 @@ export default function AdminSessionDetail() {
             <p className="text-text-muted">No events recorded</p>
           )}
         </div>
+      </div>
+
+      <div className="bg-bg-surface rounded-xl p-6 mt-6">
+        <h2 className="font-semibold text-text-primary mb-4">Recordings</h2>
+        {session.recordings?.some(r => r.status === 'ready') ? (
+          <div className="space-y-3">
+            {session.recordings.filter(r => r.status === 'ready').map(r => (
+              <div key={r.id} className="flex items-center justify-between p-3 rounded-lg bg-bg-elevated">
+                <span className="text-text-primary text-sm">Recording from {new Date(r.created_at).toLocaleString()}</span>
+                <Button variant="secondary" size="sm" onClick={() => window.open(r.file_url, '_blank')}>
+                  <Download className="w-4 h-4 mr-2" /> Download
+                </Button>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="text-text-muted">No recordings available</p>
+        )}
       </div>
     </div>
   );

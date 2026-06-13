@@ -16,6 +16,7 @@ export default function Dashboard() {
   const { sessions, setSessions, isLoading, setIsLoading } = useSessionStore();
   const { showError, showSuccess } = useUiStore();
   const [inviteModalSession, setInviteModalSession] = useState(null);
+  const [activeTab, setActiveTab] = useState('active');
 
   const loadSessions = useCallback(async () => {
     setIsLoading(true);
@@ -117,52 +118,71 @@ export default function Dashboard() {
           }
         />
       ) : (
-        <div className="space-y-8">
-          {activeSessions.length > 0 && (
-            <section className="animate-fade-in animation-delay-300">
-              <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-4 flex items-center gap-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 status-ripple inline-block" />
-                Active Sessions
-              </h2>
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {activeSessions.map((session, index) => (
-                  <div
-                    key={session.id}
-                    className="animate-slide-up"
-                    style={{ animationDelay: `${index * 75}ms` }}
-                  >
-                    <SessionCard
-                      session={session}
-                      onJoin={() => navigate(`/session/${session.id}`)}
-                      onEnd={() => handleEndSession(session.id)}
-                      onShare={() => setInviteModalSession(session)}
-                    />
-                  </div>
-                ))}
-              </div>
+        <div className="space-y-6">
+          <div className="flex border-b border-white/10 mb-6">
+            <button
+              className={`px-4 py-3 text-sm font-medium transition-colors border-b-2 ${activeTab === 'active' ? 'text-blue-400 border-blue-400' : 'text-gray-400 border-transparent hover:text-gray-200 hover:border-white/20'}`}
+              onClick={() => setActiveTab('active')}
+            >
+              Active Sessions ({activeSessions.length})
+            </button>
+            <button
+              className={`px-4 py-3 text-sm font-medium transition-colors border-b-2 ${activeTab === 'past' ? 'text-blue-400 border-blue-400' : 'text-gray-400 border-transparent hover:text-gray-200 hover:border-white/20'}`}
+              onClick={() => setActiveTab('past')}
+            >
+              Past Sessions ({pastSessions.length})
+            </button>
+          </div>
+
+          {activeTab === 'active' && (
+            <section className="animate-fade-in">
+              {activeSessions.length > 0 ? (
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                  {activeSessions.map((session, index) => (
+                    <div
+                      key={session.id}
+                      className="animate-slide-up"
+                      style={{ animationDelay: `${index * 75}ms` }}
+                    >
+                      <SessionCard
+                        session={session}
+                        onJoin={() => navigate(`/session/${session.id}`)}
+                        onEnd={() => handleEndSession(session.id)}
+                        onShare={() => setInviteModalSession(session)}
+                      />
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-12">
+                  <p className="text-gray-500">No active sessions at the moment.</p>
+                </div>
+              )}
             </section>
           )}
 
-          {pastSessions.length > 0 && (
-            <section className="animate-fade-in animation-delay-500">
-              <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-4 flex items-center gap-2">
-                <Clock className="w-3.5 h-3.5" />
-                Past Sessions
-              </h2>
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {pastSessions.map((session, index) => (
-                  <div
-                    key={session.id}
-                    className="animate-slide-up"
-                    style={{ animationDelay: `${index * 50}ms` }}
-                  >
-                    <SessionCard
-                      session={session}
-                      onView={() => navigate(`/session/${session.id}/ended`)}
-                    />
-                  </div>
-                ))}
-              </div>
+          {activeTab === 'past' && (
+            <section className="animate-fade-in">
+              {pastSessions.length > 0 ? (
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                  {pastSessions.map((session, index) => (
+                    <div
+                      key={session.id}
+                      className="animate-slide-up"
+                      style={{ animationDelay: `${index * 50}ms` }}
+                    >
+                      <SessionCard
+                        session={session}
+                        onView={() => navigate(`/session/${session.id}/ended`)}
+                      />
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-12">
+                  <p className="text-gray-500">No past sessions found.</p>
+                </div>
+              )}
             </section>
           )}
         </div>
