@@ -54,7 +54,7 @@ export function useChat(sessionId) {
       });
 
       if (socket?.connected) {
-        socket.emit('send-chat', { sessionId, message: content }, (error, response) => {
+        socket.timeout(5000).emit('send-chat', { sessionId, message: content }, (error, response) => {
           if (error || response?.ok === false) {
             updateMessageStatus(tempId, { pending: false, failed: true });
             showError('Failed to send message', getErrorDetails(response?.error || error));
@@ -113,7 +113,7 @@ export function useChat(sessionId) {
         }
 
         if (socket?.connected) {
-          socket.emit(
+          socket.timeout(10000).emit(
             'share-file',
             {
               sessionId,
