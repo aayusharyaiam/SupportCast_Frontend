@@ -7,6 +7,7 @@ export function useMediasoup() {
   const recvTransportRef = useRef(null);
   const producersRef = useRef(new Map());
   const consumersRef = useRef(new Map());
+  const iceServersRef = useRef(null);
   const [isProducerReady, setIsProducerReady] = useState(false);
   const [rtpCapabilities, setRtpCapabilities] = useState(null);
 
@@ -18,15 +19,37 @@ export function useMediasoup() {
     return device;
   }, []);
 
+  /**
+   * Fetch ICE servers (STUN/TURN) from the backend and cache them.
+   * TURN servers are critical when mediasoup's direct UDP/TCP ports are
+   * unreachable (e.g., on Render.com).
+   */
+  const fetchIceServers = useCallback(async (emit) => {
+    if (iceServersRef.current) return iceServersRef.current;
+    try {
+      const servers = await emit('get-ice-servers', {});
+      iceServersRef.current = servers;
+      return servers;
+    } catch {
+      // Fallback to Google STUN if backend doesn't support get-ice-servers
+      const fallback = [{ urls: ['stun:stun.l.google.com:19302'] }];
+      iceServersRef.current = fallback;
+      return fallback;
+    }
+  }, []);
+
   const createSendTransport = useCallback(async (serverTransport, sessionId, emit) => {
     const device = deviceRef.current;
     if (!device) throw new Error('Device not initialized');
+
+    const iceServers = await fetchIceServers(emit);
 
     const transport = device.createSendTransport({
       id: serverTransport.id,
       iceParameters: serverTransport.iceParameters,
       iceCandidates: serverTransport.iceCandidates,
       dtlsParameters: serverTransport.dtlsParameters,
+      iceServers,
     });
 
     transport.on('connect', async ({ dtlsParameters }, callback, errback) => {
@@ -58,17 +81,20 @@ export function useMediasoup() {
 
     sendTransportRef.current = transport;
     return transport;
-  }, []);
+  }, [fetchIceServers]);
 
   const createRecvTransport = useCallback(async (serverTransport, sessionId, emit) => {
     const device = deviceRef.current;
     if (!device) throw new Error('Device not initialized');
+
+    const iceServers = await fetchIceServers(emit);
 
     const transport = device.createRecvTransport({
       id: serverTransport.id,
       iceParameters: serverTransport.iceParameters,
       iceCandidates: serverTransport.iceCandidates,
       dtlsParameters: serverTransport.dtlsParameters,
+      iceServers,
     });
 
     transport.on('connect', async ({ dtlsParameters }, callback, errback) => {
@@ -86,7 +112,7 @@ export function useMediasoup() {
 
     recvTransportRef.current = transport;
     return transport;
-  }, []);
+  }, [fetchIceServers]);
 
   const produce = useCallback(async (transport, track, _kind) => {
     const producer = await transport.produce({ track });
@@ -148,6 +174,7 @@ export function useMediasoup() {
       recvTransportRef.current = null;
     }
     deviceRef.current = null;
+    iceServersRef.current = null;
     setIsProducerReady(false);
     setRtpCapabilities(null);
   }, []);
