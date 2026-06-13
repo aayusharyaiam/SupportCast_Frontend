@@ -12,7 +12,7 @@ export default function InviteModal({ session, onClose }) {
 
   const inviteToken = session.invite_token || session.inviteToken;
   const inviteLink = `${window.location.origin}/join?token=${inviteToken}`;
-  const sessionId = session.id || session.session_id;
+  const sessionId = session.id || session.session_id || session.data?.id;
 
   const handleCopy = async () => {
     try {
@@ -36,7 +36,7 @@ export default function InviteModal({ session, onClose }) {
       title="Share Invite Link"
       footer={
         <>
-          <Button onClick={handleJoin} disabled={!sessionId}>
+          <Button onClick={handleJoin}>
             <Video className="w-4 h-4" />
             Join Meet
           </Button>

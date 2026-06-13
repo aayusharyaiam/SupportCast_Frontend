@@ -104,10 +104,6 @@ export function useMediasoup() {
       rtpCapabilities: device.rtpCapabilities,
     });
 
-    if (!device.canConsume({ producerId, rtpCapabilities: device.rtpCapabilities })) {
-      throw new Error('Cannot consume this producer');
-    }
-
     const consumer = await transport.consume({
       producerId,
       id: consumerOptions.id,

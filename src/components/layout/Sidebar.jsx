@@ -6,6 +6,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Video,
+  User,
 } from 'lucide-react';
 import { useUiStore } from '../../store/uiStore';
 import { signOut } from '../../services/supabase';
@@ -27,6 +28,8 @@ export default function Sidebar() {
     localStorage.removeItem('socketToken');
     localStorage.removeItem('role');
     localStorage.removeItem('userId');
+    localStorage.removeItem('email');
+    localStorage.removeItem('displayName');
     navigate('/login');
   };
 
@@ -113,8 +116,29 @@ export default function Sidebar() {
         </div>
       )}
 
-      {/* Logout */}
+      {/* User Info & Logout */}
       <div className="p-3 border-t border-white/[0.06]">
+        {isSidebarOpen ? (
+          <div className="flex items-center gap-3 px-3 py-2.5 mb-2 rounded-xl bg-white/[0.03] border border-white/[0.06]">
+            <div className="w-8 h-8 rounded-lg bg-blue-500/15 border border-blue-500/25 flex items-center justify-center flex-shrink-0">
+              <User className="w-4 h-4 text-blue-400" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-medium text-gray-200 truncate">
+                {localStorage.getItem('displayName') || 'Agent'}
+              </p>
+              <p className="text-xs text-gray-500 truncate">
+                {localStorage.getItem('email') || localStorage.getItem('role') || 'agent'}
+              </p>
+            </div>
+          </div>
+        ) : (
+          <div className="flex justify-center mb-2" data-tooltip={localStorage.getItem('displayName') || 'Agent'}>
+            <div className="w-8 h-8 rounded-lg bg-blue-500/15 border border-blue-500/25 flex items-center justify-center">
+              <User className="w-4 h-4 text-blue-400" />
+            </div>
+          </div>
+        )}
         <button
           onClick={handleLogout}
           className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-gray-400 hover:text-red-400 hover:bg-red-500/5 border border-transparent hover:border-red-500/10 transition-all text-sm font-medium group"

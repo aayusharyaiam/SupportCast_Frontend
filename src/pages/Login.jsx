@@ -22,6 +22,7 @@ export default function Login() {
       localStorage.setItem('role', agent.role);
       localStorage.setItem('userId', agent.id);
       localStorage.setItem('displayName', agent.display_name);
+      localStorage.setItem('email', agent.email);
       navigate('/dashboard');
     } catch (err) {
       setError(err.message || 'Invalid email or password');
